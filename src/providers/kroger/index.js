@@ -6,6 +6,7 @@ import {
   addToCart,
   getProfile,
 } from "./api.js";
+import { parseReceipt } from "./receipt.js";
 
 const krogerProvider = {
   name: "kroger",
@@ -39,6 +40,15 @@ const krogerProvider = {
   searchLocations,
   addToCart,
   getProfile,
+
+  // Receipt parsing
+  parseReceipt,
+
+  // Email search patterns for receipt import
+  receiptEmailPatterns: {
+    from: ["kroger.com", "ralphs.com", "fredmeyer.com", "harristeeter.com", "frysfood.com", "qfc.com", "kingsoopers.com"],
+    subject: ["receipt", "order summary", "your order", "purchase"],
+  },
 };
 
 export default krogerProvider;

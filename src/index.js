@@ -10,6 +10,7 @@ import { searchCmd, productCmd } from "./commands/products.js";
 import locationsCmd from "./commands/locations.js";
 import cartCmd from "./commands/cart.js";
 import recipesCmd from "./commands/recipes.js";
+import purchasesCmd from "./commands/purchases.js";
 
 // Register providers
 registerProvider("kroger", krogerProvider);
@@ -44,5 +45,8 @@ program.addCommand(cartCmd);
 
 // Recipes
 program.addCommand(recipesCmd);
+
+// Purchases
+program.addCommand(purchasesCmd);
 
 program.parse();

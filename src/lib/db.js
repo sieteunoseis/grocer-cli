@@ -33,6 +33,32 @@ db.exec(`
     quantity INTEGER DEFAULT 1,
     FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    chain TEXT NOT NULL,
+    store TEXT,
+    date TEXT NOT NULL,
+    subtotal REAL,
+    tax REAL,
+    total REAL,
+    savings REAL,
+    source TEXT DEFAULT 'manual',
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS purchase_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_id INTEGER NOT NULL,
+    product_name TEXT NOT NULL,
+    product_id TEXT,
+    upc TEXT,
+    quantity REAL DEFAULT 1,
+    unit_price REAL,
+    total_price REAL,
+    savings REAL,
+    FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE
+  );
 `);
 
 // --- Token helpers ---
@@ -87,6 +113,79 @@ export function getRecipeItems(recipeId) {
 
 export function removeRecipeItem(itemId) {
   return db.prepare("DELETE FROM recipe_items WHERE id = ?").run(itemId);
+}
+
+// --- Purchase helpers ---
+export function createPurchase({ chain, store, date, subtotal, tax, total, savings, source }) {
+  const result = db.prepare(
+    `INSERT INTO purchases (chain, store, date, subtotal, tax, total, savings, source)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(chain, store || null, date, subtotal || null, tax || null, total || null, savings || null, source || "manual");
+  return result.lastInsertRowid;
+}
+
+export function addPurchaseItem(purchaseId, { productName, productId, upc, quantity, unitPrice, totalPrice, savings }) {
+  return db.prepare(
+    `INSERT INTO purchase_items (purchase_id, product_name, product_id, upc, quantity, unit_price, total_price, savings)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(purchaseId, productName, productId || null, upc || null, quantity || 1, unitPrice || null, totalPrice || null, savings || null);
+}
+
+export function listPurchases(limit = 20) {
+  return db.prepare(
+    `SELECT p.*, COUNT(pi.id) as item_count
+     FROM purchases p
+     LEFT JOIN purchase_items pi ON pi.purchase_id = p.id
+     GROUP BY p.id
+     ORDER BY p.date DESC
+     LIMIT ?`
+  ).all(limit);
+}
+
+export function getPurchase(id) {
+  return db.prepare("SELECT * FROM purchases WHERE id = ?").get(id);
+}
+
+export function getPurchaseItems(purchaseId) {
+  return db.prepare("SELECT * FROM purchase_items WHERE purchase_id = ?").all(purchaseId);
+}
+
+export function deletePurchase(id) {
+  return db.prepare("DELETE FROM purchases WHERE id = ?").run(id);
+}
+
+export function getPurchaseStats() {
+  const totals = db.prepare(
+    `SELECT COUNT(*) as trip_count,
+            SUM(total) as total_spent,
+            AVG(total) as avg_per_trip,
+            SUM(savings) as total_savings
+     FROM purchases`
+  ).get();
+
+  const topItems = db.prepare(
+    `SELECT product_name,
+            SUM(quantity) as total_qty,
+            COUNT(*) as appearances,
+            AVG(unit_price) as avg_price
+     FROM purchase_items
+     GROUP BY LOWER(product_name)
+     ORDER BY appearances DESC
+     LIMIT 10`
+  ).all();
+
+  const monthly = db.prepare(
+    `SELECT strftime('%Y-%m', date) as month,
+            COUNT(*) as trips,
+            SUM(total) as spent,
+            SUM(savings) as saved
+     FROM purchases
+     GROUP BY month
+     ORDER BY month DESC
+     LIMIT 6`
+  ).all();
+
+  return { totals, topItems, monthly };
 }
 
 export default db;
