@@ -14,6 +14,7 @@ import purchasesCmd from "./commands/purchases.js";
 import feedsCmd from "./commands/feeds.js";
 import budgetCmd from "./commands/budget.js";
 import exportCmd from "./commands/export.js";
+import pantryCmd from "./commands/pantry.js";
 
 // Register providers
 registerProvider("kroger", krogerProvider);
@@ -60,5 +61,8 @@ program.addCommand(budgetCmd);
 
 // Export to Instacart
 program.addCommand(exportCmd);
+
+// Pantry / Best-By Tracking
+program.addCommand(pantryCmd);
 
 program.parse();

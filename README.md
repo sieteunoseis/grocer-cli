@@ -186,6 +186,50 @@ grocer export list "milk" "eggs" "bread" "chicken breast"
 
 The generated link opens Instacart where you pick your store (e.g. Fred Meyer), review matched products, and check out for delivery.
 
+### Pantry / Best-By Tracking
+
+Track what's in your fridge and when it expires. Items get estimated "best by" dates based on USDA/FDA shelf life guidelines (~120 common grocery items).
+
+```bash
+# Auto-track from a purchase — estimates best-by for each item
+grocer pantry track 1
+
+# Or add manually
+grocer pantry add "milk"
+grocer pantry add "salmon" --best-by 2026-03-23
+
+# Check what's expiring
+grocer pantry status
+grocer pantry expiring --days 3
+
+# Look up shelf life for any item
+grocer pantry shelf-life "chicken breast"
+#   chicken breast: ~2 days
+
+# Manage items
+grocer pantry consumed 3     # Mark as used
+grocer pantry extend 2 2026-03-28  # Adjust date
+grocer pantry toss 5         # Remove
+grocer pantry list            # Full list
+```
+
+Example `pantry status`:
+
+```
+Pantry Status
+
+  3 fresh   2 expiring soon   0 expired
+  5 items tracked
+
+  Expiring soon:
+    Chicken Breast — best by 2026-03-21 (today)  [#2]
+    Bananas — best by 2026-03-24 (in 3d)  [#3]
+
+  Fresh:
+    2% Milk 1 Gal — best by 2026-03-26 (5d)  [#1]
+    Canned Black Beans — best by 2026-03-26 (5d)  [#4]
+```
+
 ### Auth & Config
 
 ```bash

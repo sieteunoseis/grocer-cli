@@ -88,6 +88,22 @@ db.exec(`
     period TEXT NOT NULL DEFAULT 'weekly',
     start_date TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS pantry (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_item_id INTEGER,
+    product_name TEXT NOT NULL,
+    product_id TEXT,
+    upc TEXT,
+    quantity REAL DEFAULT 1,
+    purchase_date TEXT NOT NULL,
+    best_by TEXT NOT NULL,
+    shelf_life_days INTEGER NOT NULL,
+    consumed INTEGER DEFAULT 0,
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (purchase_item_id) REFERENCES purchase_items(id) ON DELETE SET NULL
+  );
 `);
 
 // --- Token helpers ---
@@ -299,6 +315,43 @@ export function getSpendingForPeriod(startDate, endDate) {
      FROM purchases
      WHERE date >= ? AND date <= ?`
   ).get(startDate, endDate);
+}
+
+// --- Pantry helpers ---
+export function addPantryItem({ purchaseItemId, productName, productId, upc, quantity, purchaseDate, bestBy, shelfLifeDays, notes }) {
+  const result = db.prepare(
+    `INSERT INTO pantry (purchase_item_id, product_name, product_id, upc, quantity, purchase_date, best_by, shelf_life_days, consumed, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`
+  ).run(purchaseItemId || null, productName, productId || null, upc || null, quantity || 1, purchaseDate, bestBy, shelfLifeDays, notes || null);
+  return result.lastInsertRowid;
+}
+
+export function getPantryItems({ includeConsumed = false } = {}) {
+  const where = includeConsumed ? "" : "WHERE consumed = 0";
+  return db.prepare(
+    `SELECT * FROM pantry ${where} ORDER BY best_by ASC`
+  ).all();
+}
+
+export function getExpiringItems(withinDays = 3) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() + withinDays);
+  const cutoffStr = cutoff.toISOString().split("T")[0];
+  return db.prepare(
+    `SELECT * FROM pantry WHERE consumed = 0 AND best_by <= ? ORDER BY best_by ASC`
+  ).all(cutoffStr);
+}
+
+export function markConsumed(pantryId) {
+  return db.prepare("UPDATE pantry SET consumed = 1 WHERE id = ?").run(pantryId);
+}
+
+export function updateBestBy(pantryId, newBestBy) {
+  return db.prepare("UPDATE pantry SET best_by = ? WHERE id = ?").run(newBestBy, pantryId);
+}
+
+export function removePantryItem(id) {
+  return db.prepare("DELETE FROM pantry WHERE id = ?").run(id);
 }
 
 export default db;
