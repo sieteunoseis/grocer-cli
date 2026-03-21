@@ -2,6 +2,8 @@ import { Command } from "commander";
 import { getBudget, setBudget, getSpendingForPeriod } from "../lib/db.js";
 import chalk from "chalk";
 
+const SPARK_CHARS = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+
 const budgetCmd = new Command("budget").description(
   "Set and track a grocery budget"
 );
@@ -90,6 +92,22 @@ budgetCmd
         chalk.dim(`\n  ${daysLeft} days left — ~$${perDay.toFixed(2)}/day remaining`)
       );
     }
+
+    // Sparkline of recent periods
+    const sparkData = getRecentPeriodSpending(budget, 8);
+    if (sparkData.some((d) => d.spent > 0)) {
+      const spark = sparkline(
+        sparkData.map((d) => d.spent),
+        budget.amount
+      );
+      console.log(`\n  Spending trend:  ${colorSparkline(sparkData, budget.amount)}`);
+      console.log(
+        chalk.dim(
+          `                   ${sparkData[0].label}${" ".repeat(Math.max(0, spark.length - sparkData[0].label.length - sparkData[sparkData.length - 1].label.length))}${sparkData[sparkData.length - 1].label}`
+        )
+      );
+    }
+
     console.log();
   });
 
@@ -97,7 +115,7 @@ budgetCmd
 budgetCmd
   .command("history")
   .description("View budget history across recent periods")
-  .option("-n, --periods <n>", "Number of periods to show", "4")
+  .option("-n, --periods <n>", "Number of periods to show", "8")
   .action((opts) => {
     const budget = getBudget();
     if (!budget) {
@@ -116,6 +134,7 @@ budgetCmd
     const daysSinceStart = Math.floor((today - start) / (1000 * 60 * 60 * 24));
     const currentPeriodIndex = Math.floor(daysSinceStart / periodDays);
 
+    const rows = [];
     for (
       let i = currentPeriodIndex;
       i >= Math.max(0, currentPeriodIndex - periodsToShow + 1);
@@ -133,15 +152,111 @@ budgetCmd
       const pct =
         budget.amount > 0 ? (spending.spent / budget.amount) * 100 : 0;
       const isCurrent = i === currentPeriodIndex;
-      const label = isCurrent ? chalk.bold("(current)") : "";
+      const label = isCurrent ? chalk.bold(" ← now") : "";
       const color = pct > 100 ? chalk.red : pct > 80 ? chalk.yellow : chalk.green;
 
-      console.log(
-        `  ${startStr} → ${endStr}  ${color(`$${spending.spent.toFixed(2)}`)} / $${budget.amount.toFixed(2)}  ${color(`${pct.toFixed(0)}%`)}  ${spending.trips} trips  ${label}`
+      // Mini sparkline bar for each row
+      const miniBar = miniSparkBar(pct);
+      const coloredBar = (pct > 100 ? chalk.red : pct > 80 ? chalk.yellow : chalk.green)(miniBar);
+
+      rows.push(
+        `  ${startStr} → ${endStr}  ${coloredBar}  ${color(`$${spending.spent.toFixed(2).padStart(7)}`)} / $${budget.amount.toFixed(2)}  ${color(`${pct.toFixed(0).padStart(3)}%`)}  ${spending.trips} trips${label}`
       );
     }
+
+    for (const row of rows) console.log(row);
+
+    // Overall sparkline at the bottom
+    const sparkData = getRecentPeriodSpending(budget, periodsToShow);
+    if (sparkData.some((d) => d.spent > 0)) {
+      console.log(
+        `\n  Trend: ${colorSparkline(sparkData, budget.amount)}`
+      );
+    }
+
     console.log();
   });
+
+/**
+ * Generate a sparkline string from an array of values.
+ */
+function sparkline(values, max) {
+  if (!max) max = Math.max(...values);
+  if (max === 0) return SPARK_CHARS[0].repeat(values.length);
+
+  return values
+    .map((v) => {
+      const idx = Math.min(
+        Math.round((v / max) * (SPARK_CHARS.length - 1)),
+        SPARK_CHARS.length - 1
+      );
+      return SPARK_CHARS[idx];
+    })
+    .join("");
+}
+
+/**
+ * Generate a colored sparkline — green under budget, yellow near, red over.
+ */
+function colorSparkline(periodData, budgetAmount) {
+  return periodData
+    .map((d) => {
+      const pct = budgetAmount > 0 ? (d.spent / budgetAmount) * 100 : 0;
+      const idx = Math.min(
+        Math.round((d.spent / (budgetAmount || 1)) * (SPARK_CHARS.length - 1)),
+        SPARK_CHARS.length - 1
+      );
+      const char = SPARK_CHARS[Math.max(0, idx)];
+      if (pct > 100) return chalk.red(char);
+      if (pct > 80) return chalk.yellow(char);
+      return chalk.green(char);
+    })
+    .join("");
+}
+
+/**
+ * Mini horizontal bar for history rows (8 chars wide).
+ */
+function miniSparkBar(pct) {
+  const width = 8;
+  const filled = Math.min(Math.round((pct / 100) * width), width);
+  return "█".repeat(filled) + "░".repeat(width - filled);
+}
+
+/**
+ * Get spending data for recent periods (for sparklines).
+ */
+function getRecentPeriodSpending(budget, count) {
+  const periodDays = budget.period === "biweekly" ? 14 : 7;
+  const start = new Date(budget.start_date);
+  const today = new Date();
+  const daysSinceStart = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+  const currentPeriodIndex = Math.floor(daysSinceStart / periodDays);
+
+  const data = [];
+  for (
+    let i = Math.max(0, currentPeriodIndex - count + 1);
+    i <= currentPeriodIndex;
+    i++
+  ) {
+    const periodStart = new Date(start);
+    periodStart.setDate(periodStart.getDate() + i * periodDays);
+    const periodEnd = new Date(periodStart);
+    periodEnd.setDate(periodEnd.getDate() + periodDays - 1);
+
+    const startStr = periodStart.toISOString().split("T")[0];
+    const endStr = periodEnd.toISOString().split("T")[0];
+    const spending = getSpendingForPeriod(startStr, endStr);
+
+    data.push({
+      spent: spending.spent,
+      trips: spending.trips,
+      label: startStr.slice(5), // MM-DD
+    });
+  }
+
+  return data;
+}
 
 /**
  * Calculate the current budget period boundaries.

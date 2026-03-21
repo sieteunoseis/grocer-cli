@@ -94,6 +94,7 @@ grocer feeds fetch                          # Grab latest recipes
 grocer feeds show 42                        # View ingredients
 grocer search "chicken breast"              # Find it at your store
 grocer cart add 0001234567890 --quantity 2   # Add to cart
+grocer export feed-recipe 42                # Or send to Instacart for delivery
 ```
 
 ### Cart
@@ -158,7 +159,32 @@ Budget Status
   [██████████████████████░░░░░░░░] 72%
 
   6 days left — ~$7.03/day remaining
+
+  Spending trend:  ▅█▇▆▃▅█▅
+                   01-25  03-21
 ```
+
+`budget history` shows mini spark bars per period with a trend sparkline at the bottom.
+
+### Instacart Export
+
+Export recipes and shopping lists to [Instacart](https://www.instacart.com) for delivery. Works with any store Instacart supports (Fred Meyer, Kroger, etc.).
+
+```bash
+# Set up your Instacart API key (get one at developer portal)
+grocer config --instacart-key <your-key>
+
+# Export a local recipe — generates a shoppable Instacart link
+grocer export recipe 1
+
+# Export a feed recipe
+grocer export feed-recipe 42
+
+# Export a quick list of items
+grocer export list "milk" "eggs" "bread" "chicken breast"
+```
+
+The generated link opens Instacart where you pick your store (e.g. Fred Meyer), review matched products, and check out for delivery.
 
 ### Auth & Config
 
