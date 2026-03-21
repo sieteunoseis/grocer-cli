@@ -59,6 +59,35 @@ db.exec(`
     savings REAL,
     FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS feeds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    url TEXT NOT NULL UNIQUE,
+    title TEXT,
+    last_fetched TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS feed_recipes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    feed_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    url TEXT,
+    author TEXT,
+    published TEXT,
+    summary TEXT,
+    ingredients TEXT,
+    guid TEXT UNIQUE,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS budget (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    amount REAL NOT NULL,
+    period TEXT NOT NULL DEFAULT 'weekly',
+    start_date TEXT NOT NULL
+  );
 `);
 
 // --- Token helpers ---
@@ -186,6 +215,90 @@ export function getPurchaseStats() {
   ).all();
 
   return { totals, topItems, monthly };
+}
+
+// --- Feed helpers ---
+export function addFeed(url, title) {
+  const result = db.prepare(
+    "INSERT OR IGNORE INTO feeds (url, title) VALUES (?, ?)"
+  ).run(url, title || null);
+  if (result.changes === 0) {
+    return db.prepare("SELECT id FROM feeds WHERE url = ?").get(url).id;
+  }
+  return result.lastInsertRowid;
+}
+
+export function listFeeds() {
+  return db.prepare(
+    `SELECT f.*, COUNT(fr.id) as recipe_count
+     FROM feeds f
+     LEFT JOIN feed_recipes fr ON fr.feed_id = f.id
+     GROUP BY f.id
+     ORDER BY f.created_at DESC`
+  ).all();
+}
+
+export function getFeed(id) {
+  return db.prepare("SELECT * FROM feeds WHERE id = ?").get(id);
+}
+
+export function removeFeed(id) {
+  return db.prepare("DELETE FROM feeds WHERE id = ?").run(id);
+}
+
+export function updateFeedMeta(id, { title, lastFetched }) {
+  const updates = [];
+  const values = [];
+  if (title) { updates.push("title = ?"); values.push(title); }
+  if (lastFetched) { updates.push("last_fetched = ?"); values.push(lastFetched); }
+  if (!updates.length) return;
+  values.push(id);
+  db.prepare(`UPDATE feeds SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+}
+
+export function addFeedRecipe(feedId, { title, url, author, published, summary, ingredients, guid }) {
+  const result = db.prepare(
+    `INSERT OR IGNORE INTO feed_recipes (feed_id, title, url, author, published, summary, ingredients, guid)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(feedId, title, url || null, author || null, published || null, summary || null, ingredients || null, guid || null);
+  return result.changes > 0;
+}
+
+export function listFeedRecipes(feedId, limit = 20) {
+  if (feedId) {
+    return db.prepare(
+      "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id WHERE fr.feed_id = ? ORDER BY fr.published DESC LIMIT ?"
+    ).all(feedId, limit);
+  }
+  return db.prepare(
+    "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id ORDER BY fr.published DESC LIMIT ?"
+  ).all(limit);
+}
+
+export function getFeedRecipe(id) {
+  return db.prepare(
+    "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id WHERE fr.id = ?"
+  ).get(id);
+}
+
+// --- Budget helpers ---
+export function setBudget(amount, period, startDate) {
+  db.prepare(
+    `INSERT OR REPLACE INTO budget (id, amount, period, start_date)
+     VALUES (1, ?, ?, ?)`
+  ).run(amount, period, startDate);
+}
+
+export function getBudget() {
+  return db.prepare("SELECT * FROM budget WHERE id = 1").get();
+}
+
+export function getSpendingForPeriod(startDate, endDate) {
+  return db.prepare(
+    `SELECT COALESCE(SUM(total), 0) as spent, COUNT(*) as trips
+     FROM purchases
+     WHERE date >= ? AND date <= ?`
+  ).get(startDate, endDate);
 }
 
 export default db;

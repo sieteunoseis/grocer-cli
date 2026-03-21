@@ -11,6 +11,8 @@ import locationsCmd from "./commands/locations.js";
 import cartCmd from "./commands/cart.js";
 import recipesCmd from "./commands/recipes.js";
 import purchasesCmd from "./commands/purchases.js";
+import feedsCmd from "./commands/feeds.js";
+import budgetCmd from "./commands/budget.js";
 
 // Register providers
 registerProvider("kroger", krogerProvider);
@@ -48,5 +50,11 @@ program.addCommand(recipesCmd);
 
 // Purchases
 program.addCommand(purchasesCmd);
+
+// Feeds
+program.addCommand(feedsCmd);
+
+// Budget
+program.addCommand(budgetCmd);
 
 program.parse();
