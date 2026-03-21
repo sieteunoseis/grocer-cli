@@ -354,4 +354,40 @@ export function removePantryItem(id) {
   return db.prepare("DELETE FROM pantry WHERE id = ?").run(id);
 }
 
+/**
+ * Find unconsumed pantry items matching a product name or product_id.
+ * Used for smart cart checks — "do you already have this?"
+ */
+export function findPantryMatch(productName, productId) {
+  // Try product_id match first (most reliable)
+  if (productId) {
+    const match = db.prepare(
+      `SELECT * FROM pantry WHERE consumed = 0 AND product_id = ? ORDER BY best_by DESC LIMIT 1`
+    ).get(productId);
+    if (match) return match;
+  }
+
+  // Fall back to fuzzy name match
+  if (productName) {
+    const name = productName.toLowerCase().trim();
+    const match = db.prepare(
+      `SELECT * FROM pantry WHERE consumed = 0 AND LOWER(product_name) = ? ORDER BY best_by DESC LIMIT 1`
+    ).get(name);
+    if (match) return match;
+
+    // Partial match: pantry name contains search term or vice versa
+    const all = db.prepare(
+      `SELECT * FROM pantry WHERE consumed = 0 ORDER BY best_by DESC`
+    ).all();
+    for (const item of all) {
+      const pantryName = item.product_name.toLowerCase();
+      if (pantryName.includes(name) || name.includes(pantryName)) {
+        return item;
+      }
+    }
+  }
+
+  return null;
+}
+
 export default db;
