@@ -8,10 +8,10 @@ A command-line tool for interacting with the [Kroger API](https://developer.krog
 npm install -g .
 ```
 
-Or via [skills.sh](https://skills.sh):
+Or install agent skills via [skills.sh](https://skills.sh):
 
 ```bash
-skills install kroger-cli
+npx skills add sieteunoseis/kroger-cli
 ```
 
 ## Setup

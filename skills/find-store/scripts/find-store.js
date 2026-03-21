@@ -6,8 +6,8 @@
  * Usage: find-store <zip> [--set]
  */
 
-import { searchLocations } from "../src/lib/kroger.js";
-import { setConfig } from "../src/lib/config.js";
+import { searchLocations } from "../../../src/lib/kroger.js";
+import { setConfig } from "../../../src/lib/config.js";
 
 const args = process.argv.slice(2);
 const shouldSet = args.includes("--set");

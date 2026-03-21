@@ -6,8 +6,8 @@
  * Usage: recipe-to-cart <recipeId>
  */
 
-import { getRecipe, getRecipeItems } from "../src/lib/db.js";
-import { addToCart } from "../src/lib/kroger.js";
+import { getRecipe, getRecipeItems } from "../../../src/lib/db.js";
+import { addToCart } from "../../../src/lib/kroger.js";
 
 const recipeId = parseInt(process.argv[2], 10);
 if (!recipeId) {

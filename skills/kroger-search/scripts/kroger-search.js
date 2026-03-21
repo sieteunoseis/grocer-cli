@@ -6,7 +6,7 @@
  * Usage: kroger-search <term>
  */
 
-import { searchProducts } from "../src/lib/kroger.js";
+import { searchProducts } from "../../../src/lib/kroger.js";
 
 const term = process.argv.slice(2).join(" ");
 if (!term) {

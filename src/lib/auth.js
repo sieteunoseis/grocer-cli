@@ -5,7 +5,6 @@ import { getConfig } from "./config.js";
 
 const KROGER_AUTH_URL = "https://api.kroger.com/v1/connect/oauth2/authorize";
 const KROGER_TOKEN_URL = "https://api.kroger.com/v1/connect/oauth2/token";
-const REDIRECT_URI = "http://localhost:8888/callback";
 const SCOPES = "product.compact cart.basic:write profile.compact";
 
 /**
@@ -22,8 +21,11 @@ export async function login() {
   return new Promise((resolve, reject) => {
     const app = express();
 
-    const server = app.listen(8888, () => {
-      const authUrl = `${KROGER_AUTH_URL}?scope=${encodeURIComponent(SCOPES)}&client_id=${clientId}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`;
+    const server = app.listen(0, () => {
+      const port = server.address().port;
+      const redirectUri = `http://localhost:${port}/callback`;
+      const authUrl = `${KROGER_AUTH_URL}?scope=${encodeURIComponent(SCOPES)}&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
+      console.log(`OAuth callback server listening on port ${port}`);
       console.log("Opening browser for Kroger login...");
       console.log(`If the browser does not open, visit:\n${authUrl}\n`);
       open(authUrl).catch(() => {});
@@ -38,7 +40,9 @@ export async function login() {
       }
 
       try {
-        const tokens = await exchangeCode(code, clientId, clientSecret);
+        const port = server.address().port;
+        const redirectUri = `http://localhost:${port}/callback`;
+        const tokens = await exchangeCode(code, clientId, clientSecret, redirectUri);
         saveTokens(tokens.access_token, tokens.refresh_token, tokens.expires_in);
         res.send(
           "<h2>Success!</h2><p>You can close this tab and return to the terminal.</p>"
@@ -54,7 +58,7 @@ export async function login() {
   });
 }
 
-async function exchangeCode(code, clientId, clientSecret) {
+async function exchangeCode(code, clientId, clientSecret, redirectUri) {
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
   const res = await fetch(KROGER_TOKEN_URL, {
     method: "POST",
@@ -65,7 +69,7 @@ async function exchangeCode(code, clientId, clientSecret) {
     body: new URLSearchParams({
       grant_type: "authorization_code",
       code,
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: redirectUri,
     }),
   });
 
