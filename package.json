@@ -1,11 +1,11 @@
 {
-  "name": "kroger-cli",
-  "version": "1.0.0",
-  "description": "CLI tool for interacting with the Kroger API — search products, manage recipes, and add to cart",
+  "name": "grocer-cli",
+  "version": "2.0.0",
+  "description": "CLI tool for interacting with grocery store APIs — search products, manage recipes, and add to cart",
   "type": "module",
   "main": "src/index.js",
   "bin": {
-    "kroger": "./src/index.js"
+    "grocer": "./src/index.js"
   },
   "scripts": {
     "start": "node src/index.js",
@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@inquirer/prompts": "^8.3.2",
     "better-sqlite3": "^12.8.0",
     "chalk": "^5.6.2",
     "commander": "^14.0.3",

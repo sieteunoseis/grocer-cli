@@ -3,33 +3,26 @@ import { getConfig, setConfig } from "../lib/config.js";
 import chalk from "chalk";
 
 const configCmd = new Command("config")
-  .description("View or update Kroger API configuration")
-  .option("--client-id <id>", "Set Kroger API client ID")
-  .option("--client-secret <secret>", "Set Kroger API client secret")
-  .option("--location-id <id>", "Set preferred store location ID")
+  .description("View or update configuration")
   .option("--show", "Display current configuration")
   .action((opts) => {
-    if (opts.show || (!opts.clientId && !opts.clientSecret && !opts.locationId)) {
-      const cfg = getConfig();
-      console.log(chalk.bold("\nKroger CLI Configuration:\n"));
-      console.log(`  Client ID:     ${cfg.clientId || chalk.dim("(not set)")}`);
-      console.log(
-        `  Client Secret: ${cfg.clientSecret ? "****" + cfg.clientSecret.slice(-4) : chalk.dim("(not set)")}`
-      );
-      console.log(
-        `  Location ID:   ${cfg.locationId || chalk.dim("(not set)")}`
-      );
-      console.log();
-      return;
+    const cfg = getConfig();
+    const chain = cfg.chain || "(not set)";
+    const chainConfig = cfg[cfg.chain] || {};
+
+    console.log(chalk.bold("\nGrocer CLI Configuration:\n"));
+    console.log(`  Chain:         ${chain}`);
+
+    if (cfg.chain && chainConfig) {
+      for (const [key, value] of Object.entries(chainConfig)) {
+        const display =
+          key.toLowerCase().includes("secret") && value
+            ? "****" + value.slice(-4)
+            : value || chalk.dim("(not set)");
+        console.log(`  ${key.padEnd(13)}  ${display}`);
+      }
     }
-
-    const updates = {};
-    if (opts.clientId) updates.clientId = opts.clientId;
-    if (opts.clientSecret) updates.clientSecret = opts.clientSecret;
-    if (opts.locationId) updates.locationId = opts.locationId;
-
-    setConfig(updates);
-    console.log(chalk.green("Configuration updated."));
+    console.log();
   });
 
 export default configCmd;

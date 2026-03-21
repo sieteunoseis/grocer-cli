@@ -1,4 +1,4 @@
-# Kroger CLI Skills
+# Grocer CLI Skills
 
 Skills are modular capabilities following the [Agent Skills](https://agentskills.io) open standard. Each skill lives in its own subdirectory under `skills/` with a `SKILL.md` manifest and optional `scripts/`, `references/`, and `assets/` folders.
 
@@ -22,18 +22,18 @@ node skills/kroger-search/scripts/kroger-search.js organic milk
 ---
 
 ### `recipe-to-cart`
-Add all product-linked items from a saved recipe directly to your Kroger cart in one step.
+Add all product-linked items from a saved recipe directly to your cart in one step.
 
 ```bash
 node skills/recipe-to-cart/scripts/recipe-to-cart.js 1
 ```
 
-Requires that recipe items have been linked to Kroger product IDs (via `kroger recipe add-item` with `--product-id`).
+Requires that recipe items have been linked to product IDs (via `grocer recipe add-item` with `--product-id`).
 
 ---
 
 ### `find-store`
-Find nearby Kroger stores by zip code. Optionally set the closest one as your preferred location.
+Find nearby stores by zip code. Optionally set the closest one as your preferred location.
 
 ```bash
 node skills/find-store/scripts/find-store.js 45202
@@ -50,7 +50,7 @@ node skills/find-store/scripts/find-store.js 45202 --set
 2. Add a `SKILL.md` with YAML frontmatter (`name` and `description` are required)
 3. The directory name must match the `name` field in the frontmatter
 4. Place executable scripts in a `scripts/` subdirectory
-5. Import from `../../../src/lib/` to reuse the Kroger API client, database, and auth modules
+5. Import from `../../../src/providers/` and `../../../src/lib/` to reuse the provider APIs, database, and auth modules
 6. Keep `SKILL.md` under 500 lines; move detailed docs to `references/`
 
 ### Skill Folder Structure

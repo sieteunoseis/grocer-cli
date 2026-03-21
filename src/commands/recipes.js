@@ -58,7 +58,7 @@ recipesCmd
     console.log(chalk.dim(`Created: ${recipe.created_at}\n`));
 
     if (!items.length) {
-      console.log("  No items yet. Add items with: kroger recipe add-item");
+      console.log("  No items yet. Add items with: grocer recipe add-item");
     } else {
       console.log(chalk.bold("  Items:"));
       for (const item of items) {

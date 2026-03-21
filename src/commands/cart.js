@@ -1,18 +1,19 @@
 import { Command } from "commander";
-import { addToCart } from "../lib/kroger.js";
+import { getActiveProvider } from "../providers/registry.js";
 import { getRecipe, getRecipeItems } from "../lib/db.js";
 import chalk from "chalk";
 
-const cartCmd = new Command("cart").description("Manage your Kroger cart");
+const cartCmd = new Command("cart").description("Manage your cart");
 
 cartCmd
   .command("add")
-  .description("Add a product to your Kroger cart")
+  .description("Add a product to your cart")
   .argument("<upc>", "Product UPC")
   .option("-q, --quantity <n>", "Quantity", "1")
   .action(async (upc, opts) => {
     try {
-      await addToCart([{ upc, quantity: parseInt(opts.quantity, 10) }]);
+      const provider = getActiveProvider();
+      await provider.addToCart([{ upc, quantity: parseInt(opts.quantity, 10) }]);
       console.log(chalk.green(`Added ${opts.quantity}x ${upc} to cart.`));
     } catch (err) {
       console.error(chalk.red(`Error: ${err.message}`));
@@ -22,10 +23,11 @@ cartCmd
 
 cartCmd
   .command("add-recipe")
-  .description("Add all items from a recipe to your Kroger cart")
+  .description("Add all items from a recipe to your cart")
   .argument("<recipeId>", "Recipe ID")
   .action(async (recipeId) => {
     try {
+      const provider = getActiveProvider();
       const recipe = getRecipe(parseInt(recipeId, 10));
       if (!recipe) {
         console.log(chalk.yellow("Recipe not found."));
@@ -46,7 +48,7 @@ cartCmd
         return;
       }
 
-      await addToCart(cartItems);
+      await provider.addToCart(cartItems);
       console.log(
         chalk.green(
           `Added ${cartItems.length} items from "${recipe.name}" to cart.`

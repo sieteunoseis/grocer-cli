@@ -1,14 +1,14 @@
 ---
 name: kroger-search
 description: >
-  Search for products on Kroger by keyword and return matching results with
+  Search for products by keyword and return matching results with
   product IDs, descriptions, and prices. Use when a user wants to find grocery
-  products, compare prices, or look up items available at their local Kroger store.
+  products, compare prices, or look up items available at their local store.
 ---
 
-# Kroger Product Search
+# Product Search
 
-Search the Kroger product catalog by keyword.
+Search the product catalog by keyword via the configured grocery chain.
 
 ## Usage
 
@@ -22,9 +22,9 @@ Tab-separated rows: `productId\tdescription\tprice`
 
 ## Requirements
 
-- Kroger API credentials must be configured (`kroger config --client-id ... --client-secret ...`)
-- User must be authenticated (`kroger login`)
-- A preferred store location should be set for accurate pricing (`kroger locations <zip> --set`)
+- Grocery chain must be configured (`grocer init`)
+- User must be authenticated (`grocer login`)
+- A preferred store location should be set for accurate pricing (`grocer locations <zip> --set`)
 
 ## Example
 

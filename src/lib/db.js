@@ -1,12 +1,9 @@
 import Database from "better-sqlite3";
 import { join } from "path";
-import { homedir } from "os";
-import { mkdirSync } from "fs";
+import { getConfigDir } from "./config.js";
 
-const DATA_DIR = join(homedir(), ".kroger-cli");
-mkdirSync(DATA_DIR, { recursive: true });
-
-const DB_PATH = join(DATA_DIR, "kroger.db");
+const DATA_DIR = getConfigDir();
+const DB_PATH = join(DATA_DIR, "grocer.db");
 
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");

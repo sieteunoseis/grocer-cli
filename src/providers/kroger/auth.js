@@ -1,7 +1,7 @@
 import express from "express";
 import open from "open";
-import { saveTokens, getTokens, clearTokens } from "./db.js";
-import { getConfig } from "./config.js";
+import { saveTokens, getTokens, clearTokens } from "../../lib/db.js";
+import { getConfig } from "../../lib/config.js";
 
 const KROGER_AUTH_URL = "https://api.kroger.com/v1/connect/oauth2/authorize";
 const KROGER_TOKEN_URL = "https://api.kroger.com/v1/connect/oauth2/token";
@@ -11,10 +11,11 @@ const SCOPES = "product.compact cart.basic:write profile.compact";
  * Start a local server, open the browser for Kroger OAuth, and wait for the callback.
  */
 export async function login() {
-  const { clientId, clientSecret } = getConfig();
+  const config = getConfig();
+  const { clientId, clientSecret } = config.kroger || {};
   if (!clientId || !clientSecret) {
     throw new Error(
-      "Kroger API credentials not configured. Run: kroger config --client-id <id> --client-secret <secret>"
+      "Kroger API credentials not configured. Run: grocer init"
     );
   }
 
@@ -86,7 +87,7 @@ async function exchangeCode(code, clientId, clientSecret, redirectUri) {
 export async function getAccessToken() {
   const tokens = getTokens();
   if (!tokens) {
-    throw new Error("Not logged in. Run: kroger login");
+    throw new Error("Not logged in. Run: grocer login");
   }
 
   if (Date.now() < tokens.expires_at - 60_000) {
@@ -94,7 +95,8 @@ export async function getAccessToken() {
   }
 
   // Token expired — refresh
-  const { clientId, clientSecret } = getConfig();
+  const config = getConfig();
+  const { clientId, clientSecret } = config.kroger || {};
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
   const res = await fetch(KROGER_TOKEN_URL, {
     method: "POST",
@@ -110,7 +112,7 @@ export async function getAccessToken() {
 
   if (!res.ok) {
     clearTokens();
-    throw new Error("Session expired. Run: kroger login");
+    throw new Error("Session expired. Run: grocer login");
   }
 
   const data = await res.json();

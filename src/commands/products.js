@@ -1,15 +1,16 @@
 import { Command } from "commander";
-import { searchProducts, getProduct } from "../lib/kroger.js";
+import { getActiveProvider } from "../providers/registry.js";
 import chalk from "chalk";
 
 const searchCmd = new Command("search")
-  .description("Search for products at Kroger")
+  .description("Search for products")
   .argument("<term>", "Search term (e.g. 'milk', 'organic eggs')")
   .option("-b, --brand <brand>", "Filter by brand")
   .option("-l, --limit <n>", "Max results (default 10)", "10")
   .action(async (term, opts) => {
     try {
-      const products = await searchProducts(term, {
+      const provider = getActiveProvider();
+      const products = await provider.searchProducts(term, {
         brand: opts.brand,
         limit: opts.limit,
       });
@@ -39,10 +40,11 @@ const searchCmd = new Command("search")
 
 const productCmd = new Command("product")
   .description("Get details for a specific product")
-  .argument("<productId>", "Kroger product ID")
+  .argument("<productId>", "Product ID")
   .action(async (productId) => {
     try {
-      const p = await getProduct(productId);
+      const provider = getActiveProvider();
+      const p = await provider.getProduct(productId);
       if (!p) {
         console.log(chalk.yellow("Product not found."));
         return;

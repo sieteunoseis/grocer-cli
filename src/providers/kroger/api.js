@@ -1,5 +1,5 @@
 import { getAccessToken } from "./auth.js";
-import { getConfig } from "./config.js";
+import { getConfig } from "../../lib/config.js";
 
 const BASE_URL = "https://api.kroger.com/v1";
 
@@ -26,7 +26,8 @@ async function apiRequest(path, options = {}) {
 // --- Products ---
 export async function searchProducts(term, filters = {}) {
   const params = new URLSearchParams({ "filter.term": term });
-  const { locationId } = getConfig();
+  const config = getConfig();
+  const locationId = config.kroger?.locationId;
   if (locationId) params.set("filter.locationId", locationId);
   if (filters.brand) params.set("filter.brand", filters.brand);
   if (filters.limit) params.set("filter.limit", filters.limit);
@@ -37,7 +38,8 @@ export async function searchProducts(term, filters = {}) {
 
 export async function getProduct(productId) {
   const params = new URLSearchParams();
-  const { locationId } = getConfig();
+  const config = getConfig();
+  const locationId = config.kroger?.locationId;
   if (locationId) params.set("filter.locationId", locationId);
 
   const data = await apiRequest(`/products/${productId}?${params}`);

@@ -3,14 +3,17 @@ import { join } from "path";
 import { homedir } from "os";
 import { mkdirSync } from "fs";
 
-const CONFIG_DIR = join(homedir(), ".kroger-cli");
+const CONFIG_DIR = join(homedir(), ".grocer-cli");
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 
 const DEFAULTS = {
-  clientId: "",
-  clientSecret: "",
-  locationId: "",
+  chain: "",
 };
+
+export function getConfigDir() {
+  mkdirSync(CONFIG_DIR, { recursive: true });
+  return CONFIG_DIR;
+}
 
 export function getConfig() {
   mkdirSync(CONFIG_DIR, { recursive: true });

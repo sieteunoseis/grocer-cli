@@ -6,7 +6,10 @@
  * Usage: kroger-search <term>
  */
 
-import { searchProducts } from "../../../src/lib/kroger.js";
+import { registerProvider, getActiveProvider } from "../../../src/providers/registry.js";
+import krogerProvider from "../../../src/providers/kroger/index.js";
+
+registerProvider("kroger", krogerProvider);
 
 const term = process.argv.slice(2).join(" ");
 if (!term) {
@@ -14,7 +17,8 @@ if (!term) {
   process.exit(1);
 }
 
-const products = await searchProducts(term, { limit: 5 });
+const provider = getActiveProvider();
+const products = await provider.searchProducts(term, { limit: 5 });
 for (const p of products) {
   const price = p.items?.[0]?.price?.regular;
   console.log(

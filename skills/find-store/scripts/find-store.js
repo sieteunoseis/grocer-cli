@@ -2,12 +2,15 @@
 
 /**
  * Skill: find-store
- * Find the nearest Kroger store and optionally set it as preferred.
+ * Find the nearest store and optionally set it as preferred.
  * Usage: find-store <zip> [--set]
  */
 
-import { searchLocations } from "../../../src/lib/kroger.js";
-import { setConfig } from "../../../src/lib/config.js";
+import { registerProvider, getActiveProvider } from "../../../src/providers/registry.js";
+import krogerProvider from "../../../src/providers/kroger/index.js";
+import { getConfig, setConfig } from "../../../src/lib/config.js";
+
+registerProvider("kroger", krogerProvider);
 
 const args = process.argv.slice(2);
 const shouldSet = args.includes("--set");
@@ -18,7 +21,8 @@ if (!zip) {
   process.exit(1);
 }
 
-const locations = await searchLocations(zip, 10);
+const provider = getActiveProvider();
+const locations = await provider.searchLocations(zip, 10);
 if (!locations.length) {
   console.error("No stores found.");
   process.exit(1);
@@ -27,11 +31,15 @@ if (!locations.length) {
 for (const loc of locations) {
   const addr = loc.address || {};
   console.log(
-    `${loc.locationId}\t${loc.name || "Kroger"}\t${addr.addressLine1}, ${addr.city} ${addr.state} ${addr.zipCode}`
+    `${loc.locationId}\t${loc.name || provider.label}\t${addr.addressLine1}, ${addr.city} ${addr.state} ${addr.zipCode}`
   );
 }
 
 if (shouldSet) {
-  setConfig({ locationId: locations[0].locationId });
+  const config = getConfig();
+  const chain = config.chain;
+  setConfig({
+    [chain]: { ...config[chain], locationId: locations[0].locationId },
+  });
   console.log(`\nPreferred store set to ${locations[0].locationId}`);
 }
