@@ -44,6 +44,19 @@ node skills/find-store/scripts/find-store.js 45202 --set
 
 ---
 
+### `shelf-life-check`
+Research actual shelf life for pantry items using USDA FoodKeeper, StillTasty, and FDA sources, then update best-by dates in the database.
+
+```bash
+# Agent runs these scripts as part of the skill workflow:
+node skills/shelf-life-check/scripts/list-pantry.js
+node skills/shelf-life-check/scripts/update-item.js <pantryId> <newBestBy> [shelfLifeDays]
+```
+
+The agent searches the web for each item, compares against current estimates, and updates any that are significantly off. Cites sources for all changes.
+
+---
+
 ## Creating New Skills
 
 1. Create a new directory under `skills/` (e.g. `skills/my-skill/`)
