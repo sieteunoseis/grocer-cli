@@ -260,6 +260,41 @@ import myChainProvider from "./providers/mychain/index.js";
 registerProvider("mychain", myChainProvider);
 ```
 
+## Claude Desktop Integration
+
+Use grocer-cli with Claude Desktop for an AI-assisted shopping experience.
+
+### Quick Install
+
+Download the [`grocery-cart-manager.skill`](grocery-cart-manager.skill) file from this repo (or from the [latest release](https://github.com/sieteunoseis/grocer-cli/releases)). Open it and Claude Desktop will prompt you to add the skill.
+
+### Manual Setup
+
+1. Open Claude Desktop
+2. Go to **Customize > Skills > +**
+3. Fill in:
+   - **Skill name:** `grocery-cart-manager`
+   - **Description:** `Help manage grocery shopping with the grocer-cli tool. Use when the user asks about grocery lists, recipes, shopping, adding items to cart, or fixing unavailable items.`
+   - **Instructions:** Copy from [CHROME-EXTENSION.md](CHROME-EXTENSION.md#option-2-claude-desktop-with-skill)
+
+### What It Does
+
+When you're on your store's cart page, Claude Desktop can:
+
+- Read your cart and cross-reference against saved recipes
+- Identify missing ingredients and suggest `grocer` commands to add them
+- Spot unavailable items and suggest replacements
+
+### Claude Code + Chrome
+
+For a fully automated workflow (no copy/paste), use Claude Code with Chrome:
+
+```bash
+claude --chrome
+```
+
+See [CHROME-EXTENSION.md](CHROME-EXTENSION.md) for full details.
+
 ## Skills
 
 Standalone scripts in the `skills/` folder for quick workflows. See [SKILLS.md](SKILLS.md) for details.
