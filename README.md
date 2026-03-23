@@ -266,7 +266,7 @@ Use grocer-cli with Claude Desktop for an AI-assisted shopping experience.
 
 ### Quick Install
 
-Download the [`grocery-cart-manager.skill`](grocery-cart-manager.skill) file from this repo (or from the [latest release](https://github.com/sieteunoseis/grocer-cli/releases)). Open it and Claude Desktop will prompt you to add the skill.
+Download the [`grocery-cart-manager.skill`](https://github.com/sieteunoseis/grocer-cli/releases/latest/download/grocery-cart-manager.skill) file from the [latest release](https://github.com/sieteunoseis/grocer-cli/releases/latest). Open it and Claude Desktop will prompt you to add the skill.
 
 ### Manual Setup
 
