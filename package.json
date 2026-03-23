@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node src/index.js",
     "build:skill": "node scripts/build-skill.js",
-    "test": "node --test test/unit/",
+    "test": "node --test 'test/unit/*.test.js'",
     "test:integration": "node --test test/integration/"
   },
   "repository": {
