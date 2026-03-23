@@ -13,15 +13,20 @@ const { DatabaseSync } = require("node:sqlite");
 import { join } from "path";
 import { getConfigDir } from "./config.js";
 
-const DATA_DIR = getConfigDir();
-const DB_PATH = join(DATA_DIR, "grocer.db");
+let _db = null;
 
-const db = new DatabaseSync(DB_PATH);
-db.exec("PRAGMA journal_mode = WAL");
-db.exec("PRAGMA foreign_keys = ON");
+export function getDb() {
+  if (_db) return _db;
 
-// --- Schema ---
-db.exec(`
+  const DATA_DIR = getConfigDir();
+  const DB_PATH = join(DATA_DIR, "grocer.db");
+
+  _db = new DatabaseSync(DB_PATH);
+  _db.exec("PRAGMA journal_mode = WAL");
+  _db.exec("PRAGMA foreign_keys = ON");
+
+  // --- Schema ---
+  _db.exec(`
   CREATE TABLE IF NOT EXISTS tokens (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     access_token TEXT NOT NULL,
@@ -127,45 +132,59 @@ db.exec(`
   );
 `);
 
+  return _db;
+}
+
+export function resetDb() {
+  if (_db) {
+    _db.close();
+    _db = null;
+  }
+}
+
 // --- Token helpers ---
 export function saveTokens(accessToken, refreshToken, expiresIn) {
   const expiresAt = Date.now() + expiresIn * 1000;
-  db.prepare(
-    `INSERT OR REPLACE INTO tokens (id, access_token, refresh_token, expires_at)
+  getDb()
+    .prepare(
+      `INSERT OR REPLACE INTO tokens (id, access_token, refresh_token, expires_at)
      VALUES (1, ?, ?, ?)`,
-  ).run(accessToken, refreshToken, expiresAt);
+    )
+    .run(accessToken, refreshToken, expiresAt);
 }
 
 export function getTokens() {
-  return db.prepare("SELECT * FROM tokens WHERE id = 1").get();
+  return getDb().prepare("SELECT * FROM tokens WHERE id = 1").get();
 }
 
 export function clearTokens() {
-  db.prepare("DELETE FROM tokens").run();
+  getDb().prepare("DELETE FROM tokens").run();
 }
 
 // --- Recipe helpers ---
 export function createRecipe(name, description) {
-  const result = db
+  const result = getDb()
     .prepare("INSERT INTO recipes (name, description) VALUES (?, ?)")
     .run(name, description || null);
   return result.lastInsertRowid;
 }
 
 export function listRecipes() {
-  return db.prepare("SELECT * FROM recipes ORDER BY created_at DESC").all();
+  return getDb()
+    .prepare("SELECT * FROM recipes ORDER BY created_at DESC")
+    .all();
 }
 
 export function getRecipe(id) {
-  return db.prepare("SELECT * FROM recipes WHERE id = ?").get(id);
+  return getDb().prepare("SELECT * FROM recipes WHERE id = ?").get(id);
 }
 
 export function deleteRecipe(id) {
-  return db.prepare("DELETE FROM recipes WHERE id = ?").run(id);
+  return getDb().prepare("DELETE FROM recipes WHERE id = ?").run(id);
 }
 
 export function addRecipeItem(recipeId, productName, productId, quantity) {
-  return db
+  return getDb()
     .prepare(
       `INSERT INTO recipe_items (recipe_id, product_name, product_id, quantity)
      VALUES (?, ?, ?, ?)`,
@@ -174,13 +193,13 @@ export function addRecipeItem(recipeId, productName, productId, quantity) {
 }
 
 export function getRecipeItems(recipeId) {
-  return db
+  return getDb()
     .prepare("SELECT * FROM recipe_items WHERE recipe_id = ?")
     .all(recipeId);
 }
 
 export function removeRecipeItem(itemId) {
-  return db.prepare("DELETE FROM recipe_items WHERE id = ?").run(itemId);
+  return getDb().prepare("DELETE FROM recipe_items WHERE id = ?").run(itemId);
 }
 
 export function updateRecipeItem(itemId, { productName, productId, quantity }) {
@@ -200,7 +219,7 @@ export function updateRecipeItem(itemId, { productName, productId, quantity }) {
   }
   if (!updates.length) return;
   values.push(itemId);
-  return db
+  return getDb()
     .prepare(`UPDATE recipe_items SET ${updates.join(", ")} WHERE id = ?`)
     .run(...values);
 }
@@ -216,7 +235,7 @@ export function createPurchase({
   savings,
   source,
 }) {
-  const result = db
+  const result = getDb()
     .prepare(
       `INSERT INTO purchases (chain, store, date, subtotal, tax, total, savings, source)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -238,7 +257,7 @@ export function addPurchaseItem(
   purchaseId,
   { productName, productId, upc, quantity, unitPrice, totalPrice, savings },
 ) {
-  return db
+  return getDb()
     .prepare(
       `INSERT INTO purchase_items (purchase_id, product_name, product_id, upc, quantity, unit_price, total_price, savings)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -256,7 +275,7 @@ export function addPurchaseItem(
 }
 
 export function listPurchases(limit = 20) {
-  return db
+  return getDb()
     .prepare(
       `SELECT p.*, COUNT(pi.id) as item_count
      FROM purchases p
@@ -269,21 +288,21 @@ export function listPurchases(limit = 20) {
 }
 
 export function getPurchase(id) {
-  return db.prepare("SELECT * FROM purchases WHERE id = ?").get(id);
+  return getDb().prepare("SELECT * FROM purchases WHERE id = ?").get(id);
 }
 
 export function getPurchaseItems(purchaseId) {
-  return db
+  return getDb()
     .prepare("SELECT * FROM purchase_items WHERE purchase_id = ?")
     .all(purchaseId);
 }
 
 export function deletePurchase(id) {
-  return db.prepare("DELETE FROM purchases WHERE id = ?").run(id);
+  return getDb().prepare("DELETE FROM purchases WHERE id = ?").run(id);
 }
 
 export function getPurchaseStats() {
-  const totals = db
+  const totals = getDb()
     .prepare(
       `SELECT COUNT(*) as trip_count,
             SUM(total) as total_spent,
@@ -293,7 +312,7 @@ export function getPurchaseStats() {
     )
     .get();
 
-  const topItems = db
+  const topItems = getDb()
     .prepare(
       `SELECT product_name,
             SUM(quantity) as total_qty,
@@ -306,7 +325,7 @@ export function getPurchaseStats() {
     )
     .all();
 
-  const monthly = db
+  const monthly = getDb()
     .prepare(
       `SELECT strftime('%Y-%m', date) as month,
             COUNT(*) as trips,
@@ -324,17 +343,17 @@ export function getPurchaseStats() {
 
 // --- Feed helpers ---
 export function addFeed(url, title) {
-  const result = db
+  const result = getDb()
     .prepare("INSERT OR IGNORE INTO feeds (url, title) VALUES (?, ?)")
     .run(url, title || null);
   if (result.changes === 0) {
-    return db.prepare("SELECT id FROM feeds WHERE url = ?").get(url).id;
+    return getDb().prepare("SELECT id FROM feeds WHERE url = ?").get(url).id;
   }
   return result.lastInsertRowid;
 }
 
 export function listFeeds() {
-  return db
+  return getDb()
     .prepare(
       `SELECT f.*, COUNT(fr.id) as recipe_count
      FROM feeds f
@@ -346,11 +365,11 @@ export function listFeeds() {
 }
 
 export function getFeed(id) {
-  return db.prepare("SELECT * FROM feeds WHERE id = ?").get(id);
+  return getDb().prepare("SELECT * FROM feeds WHERE id = ?").get(id);
 }
 
 export function removeFeed(id) {
-  return db.prepare("DELETE FROM feeds WHERE id = ?").run(id);
+  return getDb().prepare("DELETE FROM feeds WHERE id = ?").run(id);
 }
 
 export function updateFeedMeta(id, { title, lastFetched }) {
@@ -366,16 +385,16 @@ export function updateFeedMeta(id, { title, lastFetched }) {
   }
   if (!updates.length) return;
   values.push(id);
-  db.prepare(`UPDATE feeds SET ${updates.join(", ")} WHERE id = ?`).run(
-    ...values,
-  );
+  getDb()
+    .prepare(`UPDATE feeds SET ${updates.join(", ")} WHERE id = ?`)
+    .run(...values);
 }
 
 export function addFeedRecipe(
   feedId,
   { title, url, author, published, summary, ingredients, guid },
 ) {
-  const result = db
+  const result = getDb()
     .prepare(
       `INSERT OR IGNORE INTO feed_recipes (feed_id, title, url, author, published, summary, ingredients, guid)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -395,13 +414,13 @@ export function addFeedRecipe(
 
 export function listFeedRecipes(feedId, limit = 20) {
   if (feedId) {
-    return db
+    return getDb()
       .prepare(
         "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id WHERE fr.feed_id = ? ORDER BY fr.published DESC LIMIT ?",
       )
       .all(feedId, limit);
   }
-  return db
+  return getDb()
     .prepare(
       "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id ORDER BY fr.published DESC LIMIT ?",
     )
@@ -409,7 +428,7 @@ export function listFeedRecipes(feedId, limit = 20) {
 }
 
 export function getFeedRecipe(id) {
-  return db
+  return getDb()
     .prepare(
       "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id WHERE fr.id = ?",
     )
@@ -418,18 +437,20 @@ export function getFeedRecipe(id) {
 
 // --- Budget helpers ---
 export function setBudget(amount, period, startDate) {
-  db.prepare(
-    `INSERT OR REPLACE INTO budget (id, amount, period, start_date)
+  getDb()
+    .prepare(
+      `INSERT OR REPLACE INTO budget (id, amount, period, start_date)
      VALUES (1, ?, ?, ?)`,
-  ).run(amount, period, startDate);
+    )
+    .run(amount, period, startDate);
 }
 
 export function getBudget() {
-  return db.prepare("SELECT * FROM budget WHERE id = 1").get();
+  return getDb().prepare("SELECT * FROM budget WHERE id = 1").get();
 }
 
 export function getSpendingForPeriod(startDate, endDate) {
-  return db
+  return getDb()
     .prepare(
       `SELECT COALESCE(SUM(total), 0) as spent, COUNT(*) as trips
      FROM purchases
@@ -450,7 +471,7 @@ export function addPantryItem({
   shelfLifeDays,
   notes,
 }) {
-  const result = db
+  const result = getDb()
     .prepare(
       `INSERT INTO pantry (purchase_item_id, product_name, product_id, upc, quantity, purchase_date, best_by, shelf_life_days, consumed, notes)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
@@ -471,14 +492,16 @@ export function addPantryItem({
 
 export function getPantryItems({ includeConsumed = false } = {}) {
   const where = includeConsumed ? "" : "WHERE consumed = 0";
-  return db.prepare(`SELECT * FROM pantry ${where} ORDER BY best_by ASC`).all();
+  return getDb()
+    .prepare(`SELECT * FROM pantry ${where} ORDER BY best_by ASC`)
+    .all();
 }
 
 export function getExpiringItems(withinDays = 3) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() + withinDays);
   const cutoffStr = cutoff.toISOString().split("T")[0];
-  return db
+  return getDb()
     .prepare(
       `SELECT * FROM pantry WHERE consumed = 0 AND best_by <= ? ORDER BY best_by ASC`,
     )
@@ -486,19 +509,19 @@ export function getExpiringItems(withinDays = 3) {
 }
 
 export function markConsumed(pantryId) {
-  return db
+  return getDb()
     .prepare("UPDATE pantry SET consumed = 1 WHERE id = ?")
     .run(pantryId);
 }
 
 export function updateBestBy(pantryId, newBestBy) {
-  return db
+  return getDb()
     .prepare("UPDATE pantry SET best_by = ? WHERE id = ?")
     .run(newBestBy, pantryId);
 }
 
 export function removePantryItem(id) {
-  return db.prepare("DELETE FROM pantry WHERE id = ?").run(id);
+  return getDb().prepare("DELETE FROM pantry WHERE id = ?").run(id);
 }
 
 /**
@@ -508,7 +531,7 @@ export function removePantryItem(id) {
 export function findPantryMatch(productName, productId) {
   // Try product_id match first (most reliable)
   if (productId) {
-    const match = db
+    const match = getDb()
       .prepare(
         `SELECT * FROM pantry WHERE consumed = 0 AND product_id = ? ORDER BY best_by DESC LIMIT 1`,
       )
@@ -519,7 +542,7 @@ export function findPantryMatch(productName, productId) {
   // Fall back to fuzzy name match
   if (productName) {
     const name = productName.toLowerCase().trim();
-    const match = db
+    const match = getDb()
       .prepare(
         `SELECT * FROM pantry WHERE consumed = 0 AND LOWER(product_name) = ? ORDER BY best_by DESC LIMIT 1`,
       )
@@ -527,7 +550,7 @@ export function findPantryMatch(productName, productId) {
     if (match) return match;
 
     // Partial match: pantry name contains search term or vice versa
-    const all = db
+    const all = getDb()
       .prepare(`SELECT * FROM pantry WHERE consumed = 0 ORDER BY best_by DESC`)
       .all();
     for (const item of all) {
@@ -543,14 +566,16 @@ export function findPantryMatch(productName, productId) {
 
 // --- Cart tracking helpers ---
 export function trackCartAddition(productId, productName, quantity, price) {
-  db.prepare(
-    `INSERT INTO cart_additions (product_id, product_name, quantity, price, available)
+  getDb()
+    .prepare(
+      `INSERT INTO cart_additions (product_id, product_name, quantity, price, available)
      VALUES (?, ?, ?, ?, 1)`,
-  ).run(productId, productName || null, quantity || 1, price || null);
+    )
+    .run(productId, productName || null, quantity || 1, price || null);
 }
 
 export function getRecentCartAdditions(withinHours = 24) {
-  return db
+  return getDb()
     .prepare(
       `SELECT * FROM cart_additions
        WHERE added_at >= datetime('now', '-' || ? || ' hours')
@@ -561,7 +586,7 @@ export function getRecentCartAdditions(withinHours = 24) {
 
 export function isInCart(productId, withinHours = 24) {
   return (
-    db
+    getDb()
       .prepare(
         `SELECT 1 FROM cart_additions
        WHERE product_id = ? AND added_at >= datetime('now', '-' || ? || ' hours')
@@ -572,7 +597,7 @@ export function isInCart(productId, withinHours = 24) {
 }
 
 export function clearCartTracking() {
-  db.prepare("DELETE FROM cart_additions").run();
+  getDb().prepare("DELETE FROM cart_additions").run();
 }
 
 /**
@@ -580,8 +605,8 @@ export function clearCartTracking() {
  * from the store website (e.g. via Chrome extension scrape).
  */
 export function importCartSnapshot(items) {
-  db.prepare("DELETE FROM cart_additions").run();
-  const stmt = db.prepare(
+  getDb().prepare("DELETE FROM cart_additions").run();
+  const stmt = getDb().prepare(
     `INSERT INTO cart_additions (product_id, product_name, quantity, price, available)
      VALUES (?, ?, ?, ?, ?)`,
   );
@@ -597,7 +622,7 @@ export function importCartSnapshot(items) {
 }
 
 export function getCartTotal() {
-  const result = db
+  const result = getDb()
     .prepare(
       `SELECT COALESCE(SUM(price), 0) as total, COUNT(*) as items
        FROM cart_additions WHERE available = 1`,
@@ -607,7 +632,7 @@ export function getCartTotal() {
 }
 
 export function getUnavailableCartItems() {
-  return db.prepare("SELECT * FROM cart_additions WHERE available = 0").all();
+  return getDb()
+    .prepare("SELECT * FROM cart_additions WHERE available = 0")
+    .all();
 }
-
-export default db;
