@@ -11,7 +11,7 @@
     "start": "node src/index.js",
     "build:skill": "node scripts/build-skill.js",
     "test": "node --test 'test/unit/*.test.js'",
-    "test:integration": "node --test test/integration/"
+    "test:integration": "node --test 'test/integration/*.test.js'"
   },
   "repository": {
     "type": "git",
