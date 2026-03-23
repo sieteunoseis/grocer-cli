@@ -15,6 +15,7 @@ import feedsCmd from "./commands/feeds.js";
 import budgetCmd from "./commands/budget.js";
 import exportCmd from "./commands/export.js";
 import pantryCmd from "./commands/pantry.js";
+import doctorCmd from "./commands/doctor.js";
 
 // Register providers
 registerProvider("kroger", krogerProvider);
@@ -24,7 +25,7 @@ const program = new Command();
 program
   .name("grocer-cli")
   .description("CLI tool for interacting with grocery store APIs")
-  .version("2.2.0");
+  .version("2.3.0");
 
 // Init / Setup
 program.addCommand(initCmd);
@@ -64,5 +65,8 @@ program.addCommand(exportCmd);
 
 // Pantry / Best-By Tracking
 program.addCommand(pantryCmd);
+
+// Diagnostics
+program.addCommand(doctorCmd);
 
 program.parse();

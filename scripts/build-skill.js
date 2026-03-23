@@ -16,7 +16,7 @@ const skillName = "grocery-cart-manager";
 const skillDir = join(root, skillName);
 const outputFile = join(root, `${skillName}.skill`);
 
-// Read the SKILL.md content from CHROME-EXTENSION.md instructions section
+// Read the SKILL.md content from CLAUDE-BROWSER-INTEGRATION.md instructions section
 // or use a dedicated source file
 const skillContent = `---
 name: grocery-cart-manager
