@@ -132,6 +132,20 @@ export function getDb() {
   );
 `);
 
+  // --- Migrations for existing databases ---
+  // ALTER TABLE is a no-op if column already exists (SQLite throws, we catch)
+  const migrations = [
+    "ALTER TABLE cart_additions ADD COLUMN price REAL",
+    "ALTER TABLE cart_additions ADD COLUMN available INTEGER DEFAULT 1",
+  ];
+  for (const sql of migrations) {
+    try {
+      _db.exec(sql);
+    } catch {
+      // Column already exists — ignore
+    }
+  }
+
   return _db;
 }
 
