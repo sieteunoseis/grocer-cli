@@ -7,13 +7,15 @@ A chain-agnostic command-line tool for interacting with grocery store APIs — s
 ## Install
 
 ```bash
-npm install -g .
+npm install -g grocer-cli
 ```
+
+Requires Node.js >= 22.5.0 (uses the built-in `node:sqlite` module).
 
 Or install agent skills via [skills.sh](https://skills.sh):
 
 ```bash
-npx skills add sieteunoseis/kroger-cli
+npx skills add sieteunoseis/grocer-cli
 ```
 
 ## Setup
@@ -25,6 +27,7 @@ grocer init
 ```
 
 This walks you through:
+
 - Choosing your grocery chain (e.g. Kroger, Fred Meyer, Ralphs)
 - Entering your API credentials
 - Getting started
@@ -239,6 +242,8 @@ grocer status         # Check auth status
 grocer config         # View configuration
 ```
 
+**Session lifetime:** Access tokens expire after ~30 minutes, but the CLI automatically refreshes them using a long-lived refresh token whenever you run a command. You don't need to log in again unless the refresh token itself expires from extended inactivity (typically weeks without any CLI usage).
+
 ## Adding a New Chain
 
 To add support for a new grocery chain, create a provider in `src/providers/<chain>/` with:
@@ -262,5 +267,6 @@ Standalone scripts in the `skills/` folder for quick workflows. See [SKILLS.md](
 ## Data Storage
 
 All data is stored locally in `~/.grocer-cli/`:
+
 - `config.json` — Chain selection, API credentials, and preferences
 - `grocer.db` — SQLite database for recipes, purchases, feeds, budget, and OAuth tokens

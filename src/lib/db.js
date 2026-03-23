@@ -1,13 +1,24 @@
-import Database from "better-sqlite3";
+import { createRequire } from "node:module";
+
+// Suppress ExperimentalWarning for node:sqlite
+const originalEmit = process.emit;
+process.emit = function (event, ...args) {
+  if (event === "warning" && args[0]?.name === "ExperimentalWarning")
+    return false;
+  return originalEmit.call(this, event, ...args);
+};
+
+const require = createRequire(import.meta.url);
+const { DatabaseSync } = require("node:sqlite");
 import { join } from "path";
 import { getConfigDir } from "./config.js";
 
 const DATA_DIR = getConfigDir();
 const DB_PATH = join(DATA_DIR, "grocer.db");
 
-const db = new Database(DB_PATH);
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+const db = new DatabaseSync(DB_PATH);
+db.exec("PRAGMA journal_mode = WAL");
+db.exec("PRAGMA foreign_keys = ON");
 
 // --- Schema ---
 db.exec(`
@@ -104,6 +115,16 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (purchase_item_id) REFERENCES purchase_items(id) ON DELETE SET NULL
   );
+
+  CREATE TABLE IF NOT EXISTS cart_additions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id TEXT NOT NULL,
+    product_name TEXT,
+    quantity INTEGER DEFAULT 1,
+    price REAL,
+    available INTEGER DEFAULT 1,
+    added_at TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 // --- Token helpers ---
@@ -111,7 +132,7 @@ export function saveTokens(accessToken, refreshToken, expiresIn) {
   const expiresAt = Date.now() + expiresIn * 1000;
   db.prepare(
     `INSERT OR REPLACE INTO tokens (id, access_token, refresh_token, expires_at)
-     VALUES (1, ?, ?, ?)`
+     VALUES (1, ?, ?, ?)`,
   ).run(accessToken, refreshToken, expiresAt);
 }
 
@@ -125,9 +146,9 @@ export function clearTokens() {
 
 // --- Recipe helpers ---
 export function createRecipe(name, description) {
-  const result = db.prepare(
-    "INSERT INTO recipes (name, description) VALUES (?, ?)"
-  ).run(name, description || null);
+  const result = db
+    .prepare("INSERT INTO recipes (name, description) VALUES (?, ?)")
+    .run(name, description || null);
   return result.lastInsertRowid;
 }
 
@@ -144,10 +165,12 @@ export function deleteRecipe(id) {
 }
 
 export function addRecipeItem(recipeId, productName, productId, quantity) {
-  return db.prepare(
-    `INSERT INTO recipe_items (recipe_id, product_name, product_id, quantity)
-     VALUES (?, ?, ?, ?)`
-  ).run(recipeId, productName, productId || null, quantity || 1);
+  return db
+    .prepare(
+      `INSERT INTO recipe_items (recipe_id, product_name, product_id, quantity)
+     VALUES (?, ?, ?, ?)`,
+    )
+    .run(recipeId, productName, productId || null, quantity || 1);
 }
 
 export function getRecipeItems(recipeId) {
@@ -160,31 +183,89 @@ export function removeRecipeItem(itemId) {
   return db.prepare("DELETE FROM recipe_items WHERE id = ?").run(itemId);
 }
 
+export function updateRecipeItem(itemId, { productName, productId, quantity }) {
+  const updates = [];
+  const values = [];
+  if (productName !== undefined) {
+    updates.push("product_name = ?");
+    values.push(productName);
+  }
+  if (productId !== undefined) {
+    updates.push("product_id = ?");
+    values.push(productId);
+  }
+  if (quantity !== undefined) {
+    updates.push("quantity = ?");
+    values.push(quantity);
+  }
+  if (!updates.length) return;
+  values.push(itemId);
+  return db
+    .prepare(`UPDATE recipe_items SET ${updates.join(", ")} WHERE id = ?`)
+    .run(...values);
+}
+
 // --- Purchase helpers ---
-export function createPurchase({ chain, store, date, subtotal, tax, total, savings, source }) {
-  const result = db.prepare(
-    `INSERT INTO purchases (chain, store, date, subtotal, tax, total, savings, source)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(chain, store || null, date, subtotal || null, tax || null, total || null, savings || null, source || "manual");
+export function createPurchase({
+  chain,
+  store,
+  date,
+  subtotal,
+  tax,
+  total,
+  savings,
+  source,
+}) {
+  const result = db
+    .prepare(
+      `INSERT INTO purchases (chain, store, date, subtotal, tax, total, savings, source)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      chain,
+      store || null,
+      date,
+      subtotal || null,
+      tax || null,
+      total || null,
+      savings || null,
+      source || "manual",
+    );
   return result.lastInsertRowid;
 }
 
-export function addPurchaseItem(purchaseId, { productName, productId, upc, quantity, unitPrice, totalPrice, savings }) {
-  return db.prepare(
-    `INSERT INTO purchase_items (purchase_id, product_name, product_id, upc, quantity, unit_price, total_price, savings)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(purchaseId, productName, productId || null, upc || null, quantity || 1, unitPrice || null, totalPrice || null, savings || null);
+export function addPurchaseItem(
+  purchaseId,
+  { productName, productId, upc, quantity, unitPrice, totalPrice, savings },
+) {
+  return db
+    .prepare(
+      `INSERT INTO purchase_items (purchase_id, product_name, product_id, upc, quantity, unit_price, total_price, savings)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      purchaseId,
+      productName,
+      productId || null,
+      upc || null,
+      quantity || 1,
+      unitPrice || null,
+      totalPrice || null,
+      savings || null,
+    );
 }
 
 export function listPurchases(limit = 20) {
-  return db.prepare(
-    `SELECT p.*, COUNT(pi.id) as item_count
+  return db
+    .prepare(
+      `SELECT p.*, COUNT(pi.id) as item_count
      FROM purchases p
      LEFT JOIN purchase_items pi ON pi.purchase_id = p.id
      GROUP BY p.id
      ORDER BY p.date DESC
-     LIMIT ?`
-  ).all(limit);
+     LIMIT ?`,
+    )
+    .all(limit);
 }
 
 export function getPurchase(id) {
@@ -192,7 +273,9 @@ export function getPurchase(id) {
 }
 
 export function getPurchaseItems(purchaseId) {
-  return db.prepare("SELECT * FROM purchase_items WHERE purchase_id = ?").all(purchaseId);
+  return db
+    .prepare("SELECT * FROM purchase_items WHERE purchase_id = ?")
+    .all(purchaseId);
 }
 
 export function deletePurchase(id) {
@@ -200,44 +283,50 @@ export function deletePurchase(id) {
 }
 
 export function getPurchaseStats() {
-  const totals = db.prepare(
-    `SELECT COUNT(*) as trip_count,
+  const totals = db
+    .prepare(
+      `SELECT COUNT(*) as trip_count,
             SUM(total) as total_spent,
             AVG(total) as avg_per_trip,
             SUM(savings) as total_savings
-     FROM purchases`
-  ).get();
+     FROM purchases`,
+    )
+    .get();
 
-  const topItems = db.prepare(
-    `SELECT product_name,
+  const topItems = db
+    .prepare(
+      `SELECT product_name,
             SUM(quantity) as total_qty,
             COUNT(*) as appearances,
             AVG(unit_price) as avg_price
      FROM purchase_items
      GROUP BY LOWER(product_name)
      ORDER BY appearances DESC
-     LIMIT 10`
-  ).all();
+     LIMIT 10`,
+    )
+    .all();
 
-  const monthly = db.prepare(
-    `SELECT strftime('%Y-%m', date) as month,
+  const monthly = db
+    .prepare(
+      `SELECT strftime('%Y-%m', date) as month,
             COUNT(*) as trips,
             SUM(total) as spent,
             SUM(savings) as saved
      FROM purchases
      GROUP BY month
      ORDER BY month DESC
-     LIMIT 6`
-  ).all();
+     LIMIT 6`,
+    )
+    .all();
 
   return { totals, topItems, monthly };
 }
 
 // --- Feed helpers ---
 export function addFeed(url, title) {
-  const result = db.prepare(
-    "INSERT OR IGNORE INTO feeds (url, title) VALUES (?, ?)"
-  ).run(url, title || null);
+  const result = db
+    .prepare("INSERT OR IGNORE INTO feeds (url, title) VALUES (?, ?)")
+    .run(url, title || null);
   if (result.changes === 0) {
     return db.prepare("SELECT id FROM feeds WHERE url = ?").get(url).id;
   }
@@ -245,13 +334,15 @@ export function addFeed(url, title) {
 }
 
 export function listFeeds() {
-  return db.prepare(
-    `SELECT f.*, COUNT(fr.id) as recipe_count
+  return db
+    .prepare(
+      `SELECT f.*, COUNT(fr.id) as recipe_count
      FROM feeds f
      LEFT JOIN feed_recipes fr ON fr.feed_id = f.id
      GROUP BY f.id
-     ORDER BY f.created_at DESC`
-  ).all();
+     ORDER BY f.created_at DESC`,
+    )
+    .all();
 }
 
 export function getFeed(id) {
@@ -265,43 +356,71 @@ export function removeFeed(id) {
 export function updateFeedMeta(id, { title, lastFetched }) {
   const updates = [];
   const values = [];
-  if (title) { updates.push("title = ?"); values.push(title); }
-  if (lastFetched) { updates.push("last_fetched = ?"); values.push(lastFetched); }
+  if (title) {
+    updates.push("title = ?");
+    values.push(title);
+  }
+  if (lastFetched) {
+    updates.push("last_fetched = ?");
+    values.push(lastFetched);
+  }
   if (!updates.length) return;
   values.push(id);
-  db.prepare(`UPDATE feeds SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+  db.prepare(`UPDATE feeds SET ${updates.join(", ")} WHERE id = ?`).run(
+    ...values,
+  );
 }
 
-export function addFeedRecipe(feedId, { title, url, author, published, summary, ingredients, guid }) {
-  const result = db.prepare(
-    `INSERT OR IGNORE INTO feed_recipes (feed_id, title, url, author, published, summary, ingredients, guid)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(feedId, title, url || null, author || null, published || null, summary || null, ingredients || null, guid || null);
+export function addFeedRecipe(
+  feedId,
+  { title, url, author, published, summary, ingredients, guid },
+) {
+  const result = db
+    .prepare(
+      `INSERT OR IGNORE INTO feed_recipes (feed_id, title, url, author, published, summary, ingredients, guid)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      feedId,
+      title,
+      url || null,
+      author || null,
+      published || null,
+      summary || null,
+      ingredients || null,
+      guid || null,
+    );
   return result.changes > 0;
 }
 
 export function listFeedRecipes(feedId, limit = 20) {
   if (feedId) {
-    return db.prepare(
-      "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id WHERE fr.feed_id = ? ORDER BY fr.published DESC LIMIT ?"
-    ).all(feedId, limit);
+    return db
+      .prepare(
+        "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id WHERE fr.feed_id = ? ORDER BY fr.published DESC LIMIT ?",
+      )
+      .all(feedId, limit);
   }
-  return db.prepare(
-    "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id ORDER BY fr.published DESC LIMIT ?"
-  ).all(limit);
+  return db
+    .prepare(
+      "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id ORDER BY fr.published DESC LIMIT ?",
+    )
+    .all(limit);
 }
 
 export function getFeedRecipe(id) {
-  return db.prepare(
-    "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id WHERE fr.id = ?"
-  ).get(id);
+  return db
+    .prepare(
+      "SELECT fr.*, f.title as feed_title FROM feed_recipes fr JOIN feeds f ON f.id = fr.feed_id WHERE fr.id = ?",
+    )
+    .get(id);
 }
 
 // --- Budget helpers ---
 export function setBudget(amount, period, startDate) {
   db.prepare(
     `INSERT OR REPLACE INTO budget (id, amount, period, start_date)
-     VALUES (1, ?, ?, ?)`
+     VALUES (1, ?, ?, ?)`,
   ).run(amount, period, startDate);
 }
 
@@ -310,44 +429,72 @@ export function getBudget() {
 }
 
 export function getSpendingForPeriod(startDate, endDate) {
-  return db.prepare(
-    `SELECT COALESCE(SUM(total), 0) as spent, COUNT(*) as trips
+  return db
+    .prepare(
+      `SELECT COALESCE(SUM(total), 0) as spent, COUNT(*) as trips
      FROM purchases
-     WHERE date >= ? AND date <= ?`
-  ).get(startDate, endDate);
+     WHERE date >= ? AND date <= ?`,
+    )
+    .get(startDate, endDate);
 }
 
 // --- Pantry helpers ---
-export function addPantryItem({ purchaseItemId, productName, productId, upc, quantity, purchaseDate, bestBy, shelfLifeDays, notes }) {
-  const result = db.prepare(
-    `INSERT INTO pantry (purchase_item_id, product_name, product_id, upc, quantity, purchase_date, best_by, shelf_life_days, consumed, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`
-  ).run(purchaseItemId || null, productName, productId || null, upc || null, quantity || 1, purchaseDate, bestBy, shelfLifeDays, notes || null);
+export function addPantryItem({
+  purchaseItemId,
+  productName,
+  productId,
+  upc,
+  quantity,
+  purchaseDate,
+  bestBy,
+  shelfLifeDays,
+  notes,
+}) {
+  const result = db
+    .prepare(
+      `INSERT INTO pantry (purchase_item_id, product_name, product_id, upc, quantity, purchase_date, best_by, shelf_life_days, consumed, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+    )
+    .run(
+      purchaseItemId || null,
+      productName,
+      productId || null,
+      upc || null,
+      quantity || 1,
+      purchaseDate,
+      bestBy,
+      shelfLifeDays,
+      notes || null,
+    );
   return result.lastInsertRowid;
 }
 
 export function getPantryItems({ includeConsumed = false } = {}) {
   const where = includeConsumed ? "" : "WHERE consumed = 0";
-  return db.prepare(
-    `SELECT * FROM pantry ${where} ORDER BY best_by ASC`
-  ).all();
+  return db.prepare(`SELECT * FROM pantry ${where} ORDER BY best_by ASC`).all();
 }
 
 export function getExpiringItems(withinDays = 3) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() + withinDays);
   const cutoffStr = cutoff.toISOString().split("T")[0];
-  return db.prepare(
-    `SELECT * FROM pantry WHERE consumed = 0 AND best_by <= ? ORDER BY best_by ASC`
-  ).all(cutoffStr);
+  return db
+    .prepare(
+      `SELECT * FROM pantry WHERE consumed = 0 AND best_by <= ? ORDER BY best_by ASC`,
+    )
+    .all(cutoffStr);
 }
 
 export function markConsumed(pantryId) {
-  return db.prepare("UPDATE pantry SET consumed = 1 WHERE id = ?").run(pantryId);
+  return db
+    .prepare("UPDATE pantry SET consumed = 1 WHERE id = ?")
+    .run(pantryId);
 }
 
 export function updateBestBy(pantryId, newBestBy) {
-  return db.prepare("UPDATE pantry SET best_by = ? WHERE id = ?").run(newBestBy, pantryId);
+  return db
+    .prepare("UPDATE pantry SET best_by = ? WHERE id = ?")
+    .run(newBestBy, pantryId);
 }
 
 export function removePantryItem(id) {
@@ -361,24 +508,28 @@ export function removePantryItem(id) {
 export function findPantryMatch(productName, productId) {
   // Try product_id match first (most reliable)
   if (productId) {
-    const match = db.prepare(
-      `SELECT * FROM pantry WHERE consumed = 0 AND product_id = ? ORDER BY best_by DESC LIMIT 1`
-    ).get(productId);
+    const match = db
+      .prepare(
+        `SELECT * FROM pantry WHERE consumed = 0 AND product_id = ? ORDER BY best_by DESC LIMIT 1`,
+      )
+      .get(productId);
     if (match) return match;
   }
 
   // Fall back to fuzzy name match
   if (productName) {
     const name = productName.toLowerCase().trim();
-    const match = db.prepare(
-      `SELECT * FROM pantry WHERE consumed = 0 AND LOWER(product_name) = ? ORDER BY best_by DESC LIMIT 1`
-    ).get(name);
+    const match = db
+      .prepare(
+        `SELECT * FROM pantry WHERE consumed = 0 AND LOWER(product_name) = ? ORDER BY best_by DESC LIMIT 1`,
+      )
+      .get(name);
     if (match) return match;
 
     // Partial match: pantry name contains search term or vice versa
-    const all = db.prepare(
-      `SELECT * FROM pantry WHERE consumed = 0 ORDER BY best_by DESC`
-    ).all();
+    const all = db
+      .prepare(`SELECT * FROM pantry WHERE consumed = 0 ORDER BY best_by DESC`)
+      .all();
     for (const item of all) {
       const pantryName = item.product_name.toLowerCase();
       if (pantryName.includes(name) || name.includes(pantryName)) {
@@ -388,6 +539,75 @@ export function findPantryMatch(productName, productId) {
   }
 
   return null;
+}
+
+// --- Cart tracking helpers ---
+export function trackCartAddition(productId, productName, quantity, price) {
+  db.prepare(
+    `INSERT INTO cart_additions (product_id, product_name, quantity, price, available)
+     VALUES (?, ?, ?, ?, 1)`,
+  ).run(productId, productName || null, quantity || 1, price || null);
+}
+
+export function getRecentCartAdditions(withinHours = 24) {
+  return db
+    .prepare(
+      `SELECT * FROM cart_additions
+       WHERE added_at >= datetime('now', '-' || ? || ' hours')
+       ORDER BY added_at DESC`,
+    )
+    .all(withinHours);
+}
+
+export function isInCart(productId, withinHours = 24) {
+  return (
+    db
+      .prepare(
+        `SELECT 1 FROM cart_additions
+       WHERE product_id = ? AND added_at >= datetime('now', '-' || ? || ' hours')
+       LIMIT 1`,
+      )
+      .get(productId, withinHours) != null
+  );
+}
+
+export function clearCartTracking() {
+  db.prepare("DELETE FROM cart_additions").run();
+}
+
+/**
+ * Import a cart snapshot — replaces current tracking with verified data
+ * from the store website (e.g. via Chrome extension scrape).
+ */
+export function importCartSnapshot(items) {
+  db.prepare("DELETE FROM cart_additions").run();
+  const stmt = db.prepare(
+    `INSERT INTO cart_additions (product_id, product_name, quantity, price, available)
+     VALUES (?, ?, ?, ?, ?)`,
+  );
+  for (const item of items) {
+    stmt.run(
+      item.productId,
+      item.productName || null,
+      item.quantity || 1,
+      item.price || null,
+      item.available ? 1 : 0,
+    );
+  }
+}
+
+export function getCartTotal() {
+  const result = db
+    .prepare(
+      `SELECT COALESCE(SUM(price), 0) as total, COUNT(*) as items
+       FROM cart_additions WHERE available = 1`,
+    )
+    .get();
+  return result;
+}
+
+export function getUnavailableCartItems() {
+  return db.prepare("SELECT * FROM cart_additions WHERE available = 0").all();
 }
 
 export default db;

@@ -6,27 +6,27 @@ import { getConfig } from "../../lib/config.js";
 const KROGER_AUTH_URL = "https://api.kroger.com/v1/connect/oauth2/authorize";
 const KROGER_TOKEN_URL = "https://api.kroger.com/v1/connect/oauth2/token";
 const SCOPES = "product.compact cart.basic:write profile.compact";
+const CALLBACK_PORT = 8000;
+const REDIRECT_URI = `http://localhost:${CALLBACK_PORT}/callback`;
 
 /**
  * Start a local server, open the browser for Kroger OAuth, and wait for the callback.
+ * Uses a fixed port (8090) so the redirect_uri matches what's registered in the Kroger developer portal.
  */
 export async function login() {
   const config = getConfig();
   const { clientId, clientSecret } = config.kroger || {};
   if (!clientId || !clientSecret) {
-    throw new Error(
-      "Kroger API credentials not configured. Run: grocer init"
-    );
+    throw new Error("Kroger API credentials not configured. Run: grocer init");
   }
 
   return new Promise((resolve, reject) => {
     const app = express();
 
-    const server = app.listen(0, () => {
-      const port = server.address().port;
-      const redirectUri = `http://localhost:${port}/callback`;
+    const server = app.listen(CALLBACK_PORT, () => {
+      const redirectUri = REDIRECT_URI;
       const authUrl = `${KROGER_AUTH_URL}?scope=${encodeURIComponent(SCOPES)}&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
-      console.log(`OAuth callback server listening on port ${port}`);
+      console.log(`OAuth callback server listening on port ${CALLBACK_PORT}`);
       console.log("Opening browser for Kroger login...");
       console.log(`If the browser does not open, visit:\n${authUrl}\n`);
       open(authUrl).catch(() => {});
@@ -41,12 +41,20 @@ export async function login() {
       }
 
       try {
-        const port = server.address().port;
-        const redirectUri = `http://localhost:${port}/callback`;
-        const tokens = await exchangeCode(code, clientId, clientSecret, redirectUri);
-        saveTokens(tokens.access_token, tokens.refresh_token, tokens.expires_in);
+        const redirectUri = REDIRECT_URI;
+        const tokens = await exchangeCode(
+          code,
+          clientId,
+          clientSecret,
+          redirectUri,
+        );
+        saveTokens(
+          tokens.access_token,
+          tokens.refresh_token,
+          tokens.expires_in,
+        );
         res.send(
-          "<h2>Success!</h2><p>You can close this tab and return to the terminal.</p>"
+          "<h2>Success!</h2><p>You can close this tab and return to the terminal.</p>",
         );
         server.close();
         resolve(tokens);
@@ -60,7 +68,9 @@ export async function login() {
 }
 
 async function exchangeCode(code, clientId, clientSecret, redirectUri) {
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
+    "base64",
+  );
   const res = await fetch(KROGER_TOKEN_URL, {
     method: "POST",
     headers: {
@@ -97,7 +107,9 @@ export async function getAccessToken() {
   // Token expired — refresh
   const config = getConfig();
   const { clientId, clientSecret } = config.kroger || {};
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
+    "base64",
+  );
   const res = await fetch(KROGER_TOKEN_URL, {
     method: "POST",
     headers: {
