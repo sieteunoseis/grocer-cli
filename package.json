@@ -1,6 +1,6 @@
 {
   "name": "grocer-cli",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "CLI tool for interacting with grocery store APIs — search products, manage recipes, and add to cart",
   "type": "module",
   "main": "src/index.js",
