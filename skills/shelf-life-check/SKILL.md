@@ -16,14 +16,16 @@ Research and update best-by dates for pantry items using authoritative food safe
 - User asks to verify or check shelf life estimates
 - User adds unusual items not in the default lookup table
 - User wants more accurate dates for specific products or brands
-- After a `grocer pantry track` when the user wants to refine estimates
+- After a `grocer-cli pantry track` when the user wants to refine estimates
 
 ## Instructions
 
 1. **Get current pantry items** by running:
+
    ```bash
    node skills/shelf-life-check/scripts/list-pantry.js
    ```
+
    This outputs tab-separated rows: `id\tproductName\tpurchaseDate\tbestBy\tshelfLifeDays`
 
 2. **For each item (or items the user specifies)**, search the web for the actual shelf life:

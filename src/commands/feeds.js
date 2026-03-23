@@ -13,14 +13,12 @@ import chalk from "chalk";
 
 const parser = new Parser({
   customFields: {
-    item: [
-      ["content:encoded", "contentEncoded"],
-    ],
+    item: [["content:encoded", "contentEncoded"]],
   },
 });
 
 const feedsCmd = new Command("feeds").description(
-  "Subscribe to recipe RSS feeds from your favorite food blogs"
+  "Subscribe to recipe RSS feeds from your favorite food blogs",
 );
 
 // --- add ---
@@ -41,7 +39,7 @@ feedsCmd
       let newCount = 0;
       for (const item of feed.items || []) {
         const ingredients = extractIngredients(
-          item.contentEncoded || item.content || item.summary || ""
+          item.contentEncoded || item.content || item.summary || "",
         );
         const added = addFeedRecipe(feedId, {
           title: item.title,
@@ -57,9 +55,7 @@ feedsCmd
 
       console.log(chalk.green(`\nSubscribed to "${feed.title}"`));
       console.log(`  ${newCount} recipes imported`);
-      console.log(
-        chalk.dim(`  Feed ID: ${feedId}`)
-      );
+      console.log(chalk.dim(`  Feed ID: ${feedId}`));
       console.log();
     } catch (err) {
       console.error(chalk.red(`Failed to add feed: ${err.message}`));
@@ -75,7 +71,7 @@ feedsCmd
     const feeds = listFeeds();
     if (!feeds.length) {
       console.log(chalk.yellow("No feeds subscribed yet."));
-      console.log(chalk.dim("Add one: grocer feeds add <rss-url>"));
+      console.log(chalk.dim("Add one: grocer-cli feeds add <rss-url>"));
       return;
     }
 
@@ -85,7 +81,7 @@ feedsCmd
         ? chalk.dim(` (last fetched ${f.last_fetched.split("T")[0]})`)
         : "";
       console.log(
-        `  ${chalk.cyan(String(f.id).padStart(3))}  ${f.title || f.url}  ${chalk.dim(`${f.recipe_count} recipes`)}${fetched}`
+        `  ${chalk.cyan(String(f.id).padStart(3))}  ${f.title || f.url}  ${chalk.dim(`${f.recipe_count} recipes`)}${fetched}`,
       );
     }
     console.log();
@@ -115,7 +111,7 @@ feedsCmd
         let newCount = 0;
         for (const item of feed.items || []) {
           const ingredients = extractIngredients(
-            item.contentEncoded || item.content || item.summary || ""
+            item.contentEncoded || item.content || item.summary || "",
           );
           const added = addFeedRecipe(f.id, {
             title: item.title,
@@ -123,7 +119,9 @@ feedsCmd
             author: item.creator || item.author,
             published: item.isoDate || item.pubDate,
             summary: truncate(item.contentSnippet || item.summary, 500),
-            ingredients: ingredients.length ? JSON.stringify(ingredients) : null,
+            ingredients: ingredients.length
+              ? JSON.stringify(ingredients)
+              : null,
             guid: item.guid || item.link,
           });
           if (added) newCount++;
@@ -133,7 +131,7 @@ feedsCmd
         console.log(
           newCount > 0
             ? chalk.green(` ${newCount} new`)
-            : chalk.dim(" up to date")
+            : chalk.dim(" up to date"),
         );
       } catch (err) {
         console.log(chalk.red(` error: ${err.message}`));
@@ -143,7 +141,7 @@ feedsCmd
     console.log(
       totalNew > 0
         ? chalk.green(`\n${totalNew} new recipes fetched.`)
-        : chalk.dim("\nAll feeds up to date.")
+        : chalk.dim("\nAll feeds up to date."),
     );
     console.log();
   });
@@ -171,10 +169,10 @@ feedsCmd
         ? chalk.dim(` (${ingredients.length} ingredients)`)
         : "";
       console.log(
-        `  ${chalk.cyan(String(r.id).padStart(3))}  ${r.title}${ingredientHint}`
+        `  ${chalk.cyan(String(r.id).padStart(3))}  ${r.title}${ingredientHint}`,
       );
       console.log(
-        `       ${chalk.dim(r.feed_title || "")}  ${chalk.dim(date)}`
+        `       ${chalk.dim(r.feed_title || "")}  ${chalk.dim(date)}`,
       );
     }
     console.log();
@@ -216,12 +214,14 @@ feedsCmd
       console.log();
       console.log(
         chalk.dim(
-          "Tip: Search for these at your store with: grocer search <ingredient>"
-        )
+          "Tip: Search for these at your store with: grocer-cli search <ingredient>",
+        ),
       );
     } else {
       console.log(
-        chalk.dim("No ingredients extracted. Visit the recipe URL for details.")
+        chalk.dim(
+          "No ingredients extracted. Visit the recipe URL for details.",
+        ),
       );
     }
     console.log();
@@ -250,7 +250,7 @@ function extractIngredients(content) {
 
   // Strategy 1: JSON-LD structured data (used by most recipe blogs)
   const jsonLdMatch = content.match(
-    /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi
+    /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi,
   );
   if (jsonLdMatch) {
     for (const block of jsonLdMatch) {
@@ -270,7 +270,7 @@ function extractIngredients(content) {
   // Strategy 2: Look for ingredient lists in HTML
   // Common class names: ingredients, ingredient-list, recipe-ingredients
   const ingredientSection = content.match(
-    /(?:class="[^"]*ingredient[^"]*"[^>]*>)([\s\S]*?)(?:<\/(?:ul|ol|div|section)>)/i
+    /(?:class="[^"]*ingredient[^"]*"[^>]*>)([\s\S]*?)(?:<\/(?:ul|ol|div|section)>)/i,
   );
   if (ingredientSection) {
     const listItems = ingredientSection[1].match(/<li[^>]*>([\s\S]*?)<\/li>/gi);
@@ -297,7 +297,11 @@ function extractIngredients(content) {
       continue;
     }
     if (inIngredients) {
-      if (/^(instructions?|directions?|steps?|method|preparation):?\s*$/i.test(line)) {
+      if (
+        /^(instructions?|directions?|steps?|method|preparation):?\s*$/i.test(
+          line,
+        )
+      ) {
         break;
       }
       // Lines starting with - or * or a measurement

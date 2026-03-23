@@ -12,8 +12,8 @@ export async function createShoppingListLink(items, options = {}) {
   const apiKey = config.instacart?.apiKey;
   if (!apiKey) {
     throw new Error(
-      "Instacart API key not configured. Run: grocer config --instacart-key <key>\n" +
-        "Get a key at https://www.instacart.com/company/business/developers"
+      "Instacart API key not configured. Run: grocer-cli config --instacart-key <key>\n" +
+        "Get a key at https://www.instacart.com/company/business/developers",
     );
   }
 
@@ -59,7 +59,7 @@ export async function createRecipeLink(recipe, options = {}) {
   const apiKey = config.instacart?.apiKey;
   if (!apiKey) {
     throw new Error(
-      "Instacart API key not configured. Run: grocer config --instacart-key <key>"
+      "Instacart API key not configured. Run: grocer-cli config --instacart-key <key>",
     );
   }
 

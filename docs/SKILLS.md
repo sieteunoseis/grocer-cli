@@ -11,6 +11,7 @@ npx skills add sieteunoseis/kroger-cli
 ## Available Skills
 
 ### `kroger-search`
+
 Search for products on Kroger by keyword and return matching results with product IDs, descriptions, and prices.
 
 ```bash
@@ -22,17 +23,19 @@ node skills/kroger-search/scripts/kroger-search.js organic milk
 ---
 
 ### `recipe-to-cart`
+
 Add all product-linked items from a saved recipe directly to your cart in one step.
 
 ```bash
 node skills/recipe-to-cart/scripts/recipe-to-cart.js 1
 ```
 
-Requires that recipe items have been linked to product IDs (via `grocer recipe add-item` with `--product-id`).
+Requires that recipe items have been linked to product IDs (via `grocer-cli recipe add-item` with `--product-id`).
 
 ---
 
 ### `find-store`
+
 Find nearby stores by zip code. Optionally set the closest one as your preferred location.
 
 ```bash
@@ -45,6 +48,7 @@ node skills/find-store/scripts/find-store.js 45202 --set
 ---
 
 ### `shelf-life-check`
+
 Research actual shelf life for pantry items using USDA FoodKeeper, StillTasty, and FDA sources, then update best-by dates in the database.
 
 ```bash

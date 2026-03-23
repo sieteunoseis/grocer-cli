@@ -22,9 +22,9 @@ Tab-separated rows: `productId\tdescription\tprice`
 
 ## Requirements
 
-- Grocery chain must be configured (`grocer init`)
-- User must be authenticated (`grocer login`)
-- A preferred store location should be set for accurate pricing (`grocer locations <zip> --set`)
+- Grocery chain must be configured (`grocer-cli init`)
+- User must be authenticated (`grocer-cli login`)
+- A preferred store location should be set for accurate pricing (`grocer-cli locations <zip> --set`)
 
 ## Example
 

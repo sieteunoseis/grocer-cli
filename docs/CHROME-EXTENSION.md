@@ -27,8 +27,8 @@ Then ask:
 
 ```
 Go to https://www.fredmeyer.com/cart, read my cart contents,
-extract UPC codes from product URLs, and run grocer cart import
-with the data. Then fix any unavailable items with grocer cart fix.
+extract UPC codes from product URLs, and run grocer-cli cart import
+with the data. Then fix any unavailable items with grocer-cli cart fix.
 ```
 
 Claude Code will:
@@ -36,8 +36,8 @@ Claude Code will:
 1. Open the cart page in Chrome
 2. Read all items, prices, and stock status
 3. Extract UPC codes from product URLs
-4. Run `grocer cart import` to sync local tracking
-5. Run `grocer cart fix` for any unavailable items
+4. Run `grocer-cli cart import` to sync local tracking
+5. Run `grocer-cli cart fix` for any unavailable items
 6. All in one automated session
 
 ### Option 2: Claude Desktop with Skill
@@ -59,17 +59,17 @@ You help the user manage their grocery shopping using the grocer-cli command-lin
 
 ## Available Commands
 
-- `grocer search "term"` — Search for products (returns product name and UPC)
-- `grocer cart add <UPC>` — Add a product to the online cart
-- `grocer cart add-recipe <id> [id...]` — Add recipe ingredients to cart (auto-deduplicates)
-- `grocer cart fix <UPC or URL>` — Replace an unavailable item with an alternative
-- `grocer cart list` — Show items added to cart recently
-- `grocer cart import` — Import cart data (paste from this chat when reading the cart page)
-- `grocer recipe list` — List saved recipes
-- `grocer recipe list <id>` — Show recipe ingredients
-- `grocer recipe edit <id>` — Interactively swap a product in a recipe
-- `grocer recipe create "name"` — Create a new recipe
-- `grocer recipe add-item <recipeId> "name" --product-id <UPC>` — Add ingredient
+- `grocer-cli search "term"` — Search for products (returns product name and UPC)
+- `grocer-cli cart add <UPC>` — Add a product to the online cart
+- `grocer-cli cart add-recipe <id> [id...]` — Add recipe ingredients to cart (auto-deduplicates)
+- `grocer-cli cart fix <UPC or URL>` — Replace an unavailable item with an alternative
+- `grocer-cli cart list` — Show items added to cart recently
+- `grocer-cli cart import` — Import cart data (paste from this chat when reading the cart page)
+- `grocer-cli recipe list` — List saved recipes
+- `grocer-cli recipe list <id>` — Show recipe ingredients
+- `grocer-cli recipe edit <id>` — Interactively swap a product in a recipe
+- `grocer-cli recipe create "name"` — Create a new recipe
+- `grocer-cli recipe add-item <recipeId> "name" --product-id <UPC>` — Add ingredient
 
 ## Reading the Cart Page
 
@@ -93,10 +93,10 @@ Extract UPC codes from product URLs (the 13-digit number in the URL path).
 
 ## Workflow
 
-1. Help user find products: suggest `grocer search "term"` commands
-2. Add to cart: suggest `grocer cart add <UPC>` or `grocer cart add-recipe`
+1. Help user find products: suggest `grocer-cli search "term"` commands
+2. Add to cart: suggest `grocer-cli cart add <UPC>` or `grocer-cli cart add-recipe`
 3. If user shows cart page: read it, cross-reference with recipes, identify missing items
-4. Fix unavailable items: suggest `grocer cart fix <UPC>`
+4. Fix unavailable items: suggest `grocer-cli cart fix <UPC>`
 5. Always end with: "Review your cart at [store URL]/cart before checkout"
 ```
 
@@ -131,7 +131,7 @@ Include the estimated total at the end.
 ```
 
 3. Copy the output
-4. Run `grocer cart import` and paste it
+4. Run `grocer-cli cart import` and paste it
 
 ## CLI Commands
 
@@ -139,10 +139,10 @@ Include the estimated total at the end.
 
 ```bash
 # Interactive paste
-grocer cart import
+grocer-cli cart import
 
 # Pipe from a file
-cat cart-snapshot.txt | grocer cart import
+cat cart-snapshot.txt | grocer-cli cart import
 ```
 
 After import, the CLI shows:
@@ -155,10 +155,10 @@ After import, the CLI shows:
 
 ```bash
 # By UPC
-grocer cart fix 0002000012138
+grocer-cli cart fix 0002000012138
 
 # By product URL from the store website
-grocer cart fix https://www.fredmeyer.com/p/green-giant-nibblers-corn-on-the-cob/0002000012138
+grocer-cli cart fix https://www.fredmeyer.com/p/green-giant-nibblers-corn-on-the-cob/0002000012138
 ```
 
 ## Limitations

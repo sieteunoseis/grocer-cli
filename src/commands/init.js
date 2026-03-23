@@ -94,11 +94,13 @@ const initCmd = new Command("init")
 
       console.log(chalk.green("\n✓ Configuration saved!\n"));
       console.log("Next steps:");
-      console.log(`  ${chalk.cyan("grocer login")}       Log in via OAuth`);
+      console.log(`  ${chalk.cyan("grocer-cli login")}       Log in via OAuth`);
       console.log(
-        `  ${chalk.cyan("grocer locations")}   Find and set your preferred store`,
+        `  ${chalk.cyan("grocer-cli locations")}   Find and set your preferred store`,
       );
-      console.log(`  ${chalk.cyan("grocer search")}     Search for products\n`);
+      console.log(
+        `  ${chalk.cyan("grocer-cli search")}     Search for products\n`,
+      );
     } catch (err) {
       if (err.name === "ExitPromptError") {
         console.log(chalk.dim("\nSetup cancelled."));

@@ -27,8 +27,8 @@ Tab-separated rows: `locationId\tstoreName\taddress`
 
 ## Requirements
 
-- Grocery chain must be configured (`grocer init`)
-- User must be authenticated (`grocer login`)
+- Grocery chain must be configured (`grocer-cli init`)
+- User must be authenticated (`grocer-cli login`)
 
 ## Example
 

@@ -17,7 +17,7 @@ export function getProviderList() {
 export function getProvider(name) {
   const provider = providers[name];
   if (!provider) {
-    throw new Error(`Unknown grocery chain: ${name}. Run: grocer init`);
+    throw new Error(`Unknown grocery chain: ${name}. Run: grocer-cli init`);
   }
   return provider;
 }
@@ -29,7 +29,7 @@ export function getProvider(name) {
 export function getActiveProvider() {
   const config = getConfig();
   if (!config.chain) {
-    throw new Error("No grocery chain configured. Run: grocer init");
+    throw new Error("No grocery chain configured. Run: grocer-cli init");
   }
   return getProvider(config.chain);
 }

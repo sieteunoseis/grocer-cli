@@ -4,7 +4,7 @@ import { createShoppingListLink, createRecipeLink } from "../lib/instacart.js";
 import chalk from "chalk";
 
 const exportCmd = new Command("export").description(
-  "Export recipes and lists to Instacart for delivery"
+  "Export recipes and lists to Instacart for delivery",
 );
 
 // --- recipe ---
@@ -23,7 +23,9 @@ exportCmd
       const items = getRecipeItems(recipe.id);
       if (!items.length) {
         console.log(
-          chalk.yellow("Recipe has no items. Add items first with: grocer recipe add-item")
+          chalk.yellow(
+            "Recipe has no items. Add items first with: grocer-cli recipe add-item",
+          ),
         );
         return;
       }
@@ -44,8 +46,8 @@ exportCmd
       console.log(`  ${url}\n`);
       console.log(
         chalk.dim(
-          "Open this link to pick your store, review items, and check out for delivery."
-        )
+          "Open this link to pick your store, review items, and check out for delivery.",
+        ),
       );
       console.log();
     } catch (err) {
@@ -73,8 +75,8 @@ exportCmd
       if (!ingredients.length) {
         console.log(
           chalk.yellow(
-            "No ingredients found in this recipe. Visit the recipe URL for details."
-          )
+            "No ingredients found in this recipe. Visit the recipe URL for details.",
+          ),
         );
         return;
       }
@@ -82,7 +84,9 @@ exportCmd
       console.log(chalk.dim("Creating Instacart link..."));
       const url = await createRecipeLink({
         title: recipe.title,
-        ingredients: ingredients.map((i) => (typeof i === "string" ? i : i.name)),
+        ingredients: ingredients.map((i) =>
+          typeof i === "string" ? i : i.name,
+        ),
         ...(recipe.url && { sourceUrl: recipe.url }),
       });
 
@@ -90,8 +94,8 @@ exportCmd
       console.log(`  ${url}\n`);
       console.log(
         chalk.dim(
-          "Open this link to pick your store (e.g. Fred Meyer), review items, and check out."
-        )
+          "Open this link to pick your store (e.g. Fred Meyer), review items, and check out.",
+        ),
       );
       console.log();
     } catch (err) {
@@ -117,7 +121,9 @@ exportCmd
       console.log(chalk.green("\nInstacart shopping list link:\n"));
       console.log(`  ${url}\n`);
       console.log(
-        chalk.dim(`  ${items.length} items — open to pick your store and check out.`)
+        chalk.dim(
+          `  ${items.length} items — open to pick your store and check out.`,
+        ),
       );
       console.log();
     } catch (err) {

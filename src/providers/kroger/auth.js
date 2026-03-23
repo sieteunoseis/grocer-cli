@@ -17,7 +17,9 @@ export async function login() {
   const config = getConfig();
   const { clientId, clientSecret } = config.kroger || {};
   if (!clientId || !clientSecret) {
-    throw new Error("Kroger API credentials not configured. Run: grocer init");
+    throw new Error(
+      "Kroger API credentials not configured. Run: grocer-cli init",
+    );
   }
 
   return new Promise((resolve, reject) => {
@@ -97,7 +99,7 @@ async function exchangeCode(code, clientId, clientSecret, redirectUri) {
 export async function getAccessToken() {
   const tokens = getTokens();
   if (!tokens) {
-    throw new Error("Not logged in. Run: grocer login");
+    throw new Error("Not logged in. Run: grocer-cli login");
   }
 
   if (Date.now() < tokens.expires_at - 60_000) {
@@ -124,7 +126,7 @@ export async function getAccessToken() {
 
   if (!res.ok) {
     clearTokens();
-    throw new Error("Session expired. Run: grocer login");
+    throw new Error("Session expired. Run: grocer-cli login");
   }
 
   const data = await res.json();

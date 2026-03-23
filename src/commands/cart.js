@@ -285,7 +285,7 @@ cartCmd
       }
       console.log(
         chalk.dim(
-          `\n  Use "grocer cart fix <UPC>" to find replacements for unavailable items.`,
+          `\n  Use "grocer-cli cart fix <UPC>" to find replacements for unavailable items.`,
         ),
       );
     }

@@ -14,7 +14,7 @@ import {
 import chalk from "chalk";
 
 const purchasesCmd = new Command("purchases").description(
-  "Track and view purchase history"
+  "Track and view purchase history",
 );
 
 // --- import ---
@@ -28,8 +28,8 @@ purchasesCmd
       if (!provider.parseReceipt) {
         console.log(
           chalk.yellow(
-            `Receipt parsing is not supported for ${provider.label} yet.`
-          )
+            `Receipt parsing is not supported for ${provider.label} yet.`,
+          ),
         );
         return;
       }
@@ -49,13 +49,13 @@ purchasesCmd
       if (!receipt.items.length) {
         console.log(
           chalk.yellow(
-            "No items could be parsed from this receipt. The email format may not be recognized."
-          )
+            "No items could be parsed from this receipt. The email format may not be recognized.",
+          ),
         );
         console.log(
           chalk.dim(
-            "Tip: You can manually add purchases with: grocer purchases add"
-          )
+            "Tip: You can manually add purchases with: grocer-cli purchases add",
+          ),
         );
         return;
       }
@@ -132,8 +132,8 @@ purchasesCmd
 
       console.log(
         chalk.green(
-          `Logged: ${quantity}x "${item}"${price ? ` @ $${price.toFixed(2)}` : ""}`
-        )
+          `Logged: ${quantity}x "${item}"${price ? ` @ $${price.toFixed(2)}` : ""}`,
+        ),
       );
     } catch (err) {
       console.error(chalk.red(`Error: ${err.message}`));
@@ -151,7 +151,7 @@ purchasesCmd
     if (!purchases.length) {
       console.log(chalk.yellow("No purchases recorded yet."));
       console.log(
-        chalk.dim("Import a receipt: grocer purchases import <file>")
+        chalk.dim("Import a receipt: grocer-cli purchases import <file>"),
       );
       return;
     }
@@ -163,7 +163,7 @@ purchasesCmd
         ? chalk.green(` saved $${p.savings.toFixed(2)}`)
         : "";
       console.log(
-        `  ${chalk.cyan(String(p.id).padStart(3))}  ${p.date}  ${p.item_count} items  ${total}${savings}  ${chalk.dim(p.source)}`
+        `  ${chalk.cyan(String(p.id).padStart(3))}  ${p.date}  ${p.item_count} items  ${total}${savings}  ${chalk.dim(p.source)}`,
       );
     }
     console.log();
@@ -236,7 +236,7 @@ purchasesCmd
       console.log(`    Avg per trip:   $${totals.avg_per_trip.toFixed(2)}`);
     if (totals.total_savings)
       console.log(
-        chalk.green(`    Total savings:  $${totals.total_savings.toFixed(2)}`)
+        chalk.green(`    Total savings:  $${totals.total_savings.toFixed(2)}`),
       );
     console.log();
 
@@ -247,7 +247,7 @@ purchasesCmd
           ? chalk.dim(` avg $${item.avg_price.toFixed(2)}`)
           : "";
         console.log(
-          `    ${item.product_name} — ${item.appearances} trips, ${item.total_qty} total${avgPrice}`
+          `    ${item.product_name} — ${item.appearances} trips, ${item.total_qty} total${avgPrice}`,
         );
       }
       console.log();
@@ -256,9 +256,11 @@ purchasesCmd
     if (monthly.length) {
       console.log(chalk.bold("  Monthly Spending:"));
       for (const m of monthly) {
-        const saved = m.saved ? chalk.green(` saved $${m.saved.toFixed(2)}`) : "";
+        const saved = m.saved
+          ? chalk.green(` saved $${m.saved.toFixed(2)}`)
+          : "";
         console.log(
-          `    ${m.month}  ${m.trips} trips  $${(m.spent || 0).toFixed(2)}${saved}`
+          `    ${m.month}  ${m.trips} trips  $${(m.spent || 0).toFixed(2)}${saved}`,
         );
       }
       console.log();

@@ -107,7 +107,7 @@ These features are **not available** through the public API:
 **Cart tracking:** Since the cart API is write-only, grocer-cli tracks all items added to cart locally in a `cart_additions` table. This enables:
 
 - Deduplication across separate `cart add` and `cart add-recipe` commands
-- `grocer cart list` to see what's been added recently
+- `grocer-cli cart list` to see what's been added recently
 - Budget estimates based on items added (prices from product search)
 
 **Budget accuracy warning:** Budget tracking is based on local data (cart additions and manual purchase logging). Since the API cannot access actual purchase totals, order history, or applied coupons/discounts, budget data is an **estimate**. Users should verify actual spending through their store account or receipts for accurate tracking.

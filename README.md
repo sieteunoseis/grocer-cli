@@ -23,7 +23,7 @@ npx skills add sieteunoseis/grocer-cli
 1. Run the interactive setup:
 
 ```bash
-grocer init
+grocer-cli init
 ```
 
 This walks you through:
@@ -35,13 +35,13 @@ This walks you through:
 2. Log in via OAuth:
 
 ```bash
-grocer login
+grocer-cli login
 ```
 
 3. Find and set your preferred store:
 
 ```bash
-grocer locations 98101 --set
+grocer-cli locations 98101 --set
 ```
 
 ## Usage
@@ -49,9 +49,9 @@ grocer locations 98101 --set
 ### Products
 
 ```bash
-grocer search "organic milk"
-grocer search "chicken breast" --brand "Simple Truth" --limit 5
-grocer product <productId>
+grocer-cli search "organic milk"
+grocer-cli search "chicken breast" --brand "Simple Truth" --limit 5
+grocer-cli product <productId>
 ```
 
 ### Recipes
@@ -59,12 +59,12 @@ grocer product <productId>
 Create and manage local recipes, then add all ingredients to your cart in one step.
 
 ```bash
-grocer recipe create "Taco Tuesday" --description "Weekly taco night"
-grocer recipe list
-grocer recipe show 1
-grocer recipe add-item 1 "Ground Beef" --product-id 0001234567890 --quantity 2
-grocer recipe remove-item 3
-grocer recipe delete 1
+grocer-cli recipe create "Taco Tuesday" --description "Weekly taco night"
+grocer-cli recipe list
+grocer-cli recipe show 1
+grocer-cli recipe add-item 1 "Ground Beef" --product-id 0001234567890 --quantity 2
+grocer-cli recipe remove-item 3
+grocer-cli recipe delete 1
 ```
 
 ### Recipe Feeds
@@ -73,38 +73,38 @@ Subscribe to RSS feeds from your favorite food blogs. The CLI extracts ingredien
 
 ```bash
 # Subscribe to a recipe blog
-grocer feeds add https://www.budgetbytes.com/feed/
+grocer-cli feeds add https://www.budgetbytes.com/feed/
 
 # List your subscriptions
-grocer feeds list
+grocer-cli feeds list
 
 # Fetch new recipes from all feeds
-grocer feeds fetch
+grocer-cli feeds fetch
 
 # Browse recipes and view ingredients
-grocer feeds recipes
-grocer feeds recipes --feed 1 --limit 10
-grocer feeds show 42
+grocer-cli feeds recipes
+grocer-cli feeds recipes --feed 1 --limit 10
+grocer-cli feeds show 42
 
 # Unsubscribe
-grocer feeds remove 1
+grocer-cli feeds remove 1
 ```
 
 Example workflow — discover a recipe and shop for it:
 
 ```bash
-grocer feeds fetch                          # Grab latest recipes
-grocer feeds show 42                        # View ingredients
-grocer search "chicken breast"              # Find it at your store
-grocer cart add 0001234567890 --quantity 2   # Add to cart
-grocer export feed-recipe 42                # Or send to Instacart for delivery
+grocer-cli feeds fetch                          # Grab latest recipes
+grocer-cli feeds show 42                        # View ingredients
+grocer-cli search "chicken breast"              # Find it at your store
+grocer-cli cart add 0001234567890 --quantity 2   # Add to cart
+grocer-cli export feed-recipe 42                # Or send to Instacart for delivery
 ```
 
 ### Cart
 
 ```bash
-grocer cart add <upc> --quantity 2
-grocer cart add-recipe 1
+grocer-cli cart add <upc> --quantity 2
+grocer-cli cart add-recipe 1
 ```
 
 ### Purchases
@@ -113,20 +113,20 @@ Track what you've bought by importing receipt emails or logging manually.
 
 ```bash
 # Import from a receipt email
-grocer purchases import receipt.eml
+grocer-cli purchases import receipt.eml
 
 # Log a purchase manually
-grocer purchases add "Almond Milk" --price 3.99 --quantity 2
+grocer-cli purchases add "Almond Milk" --price 3.99 --quantity 2
 
 # View history
-grocer purchases list
-grocer purchases show 1
+grocer-cli purchases list
+grocer-cli purchases show 1
 
 # Spending stats — top items, monthly trends, total savings
-grocer purchases stats
+grocer-cli purchases stats
 
 # Clean up
-grocer purchases delete 1
+grocer-cli purchases delete 1
 ```
 
 Pair with a Gmail skill like [idanbeck/claude-skills](https://github.com/idanbeck/claude-skills) to auto-fetch receipt emails from your inbox.
@@ -137,16 +137,16 @@ Set a weekly or biweekly grocery budget and track spending against it. The budge
 
 ```bash
 # Set a $150/week budget
-grocer budget set 150 --period weekly
+grocer-cli budget set 150 --period weekly
 
 # Or biweekly
-grocer budget set 300 --period biweekly
+grocer-cli budget set 300 --period biweekly
 
 # Check how you're doing this period
-grocer budget status
+grocer-cli budget status
 
 # View past periods
-grocer budget history
+grocer-cli budget history
 ```
 
 Example `budget status` output:
@@ -175,16 +175,16 @@ Export recipes and shopping lists to [Instacart](https://www.instacart.com) for 
 
 ```bash
 # Set up your Instacart API key (get one at developer portal)
-grocer config --instacart-key <your-key>
+grocer-cli config --instacart-key <your-key>
 
 # Export a local recipe — generates a shoppable Instacart link
-grocer export recipe 1
+grocer-cli export recipe 1
 
 # Export a feed recipe
-grocer export feed-recipe 42
+grocer-cli export feed-recipe 42
 
 # Export a quick list of items
-grocer export list "milk" "eggs" "bread" "chicken breast"
+grocer-cli export list "milk" "eggs" "bread" "chicken breast"
 ```
 
 The generated link opens Instacart where you pick your store (e.g. Fred Meyer), review matched products, and check out for delivery.
@@ -195,25 +195,25 @@ Track what's in your fridge and when it expires. Items get estimated "best by" d
 
 ```bash
 # Auto-track from a purchase — estimates best-by for each item
-grocer pantry track 1
+grocer-cli pantry track 1
 
 # Or add manually
-grocer pantry add "milk"
-grocer pantry add "salmon" --best-by 2026-03-23
+grocer-cli pantry add "milk"
+grocer-cli pantry add "salmon" --best-by 2026-03-23
 
 # Check what's expiring
-grocer pantry status
-grocer pantry expiring --days 3
+grocer-cli pantry status
+grocer-cli pantry expiring --days 3
 
 # Look up shelf life for any item
-grocer pantry shelf-life "chicken breast"
+grocer-cli pantry shelf-life "chicken breast"
 #   chicken breast: ~2 days
 
 # Manage items
-grocer pantry consumed 3     # Mark as used
-grocer pantry extend 2 2026-03-28  # Adjust date
-grocer pantry toss 5         # Remove
-grocer pantry list            # Full list
+grocer-cli pantry consumed 3     # Mark as used
+grocer-cli pantry extend 2 2026-03-28  # Adjust date
+grocer-cli pantry toss 5         # Remove
+grocer-cli pantry list            # Full list
 ```
 
 Example `pantry status`:
@@ -236,10 +236,10 @@ Pantry Status
 ### Auth & Config
 
 ```bash
-grocer login          # OAuth2 browser flow
-grocer logout         # Clear stored tokens
-grocer status         # Check auth status
-grocer config         # View configuration
+grocer-cli login          # OAuth2 browser flow
+grocer-cli logout         # Clear stored tokens
+grocer-cli status         # Check auth status
+grocer-cli config         # View configuration
 ```
 
 **Session lifetime:** Access tokens expire after ~30 minutes, but the CLI automatically refreshes them using a long-lived refresh token whenever you run a command. You don't need to log in again unless the refresh token itself expires from extended inactivity (typically weeks without any CLI usage).
@@ -282,7 +282,7 @@ Download the [`grocery-cart-manager.skill`](grocery-cart-manager.skill) file fro
 When you're on your store's cart page, Claude Desktop can:
 
 - Read your cart and cross-reference against saved recipes
-- Identify missing ingredients and suggest `grocer` commands to add them
+- Identify missing ingredients and suggest `grocer-cli` commands to add them
 - Spot unavailable items and suggest replacements
 
 ### Claude Code + Chrome

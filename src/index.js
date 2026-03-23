@@ -22,9 +22,9 @@ registerProvider("kroger", krogerProvider);
 const program = new Command();
 
 program
-  .name("grocer")
+  .name("grocer-cli")
   .description("CLI tool for interacting with grocery store APIs")
-  .version("2.0.0");
+  .version("2.2.0");
 
 // Init / Setup
 program.addCommand(initCmd);

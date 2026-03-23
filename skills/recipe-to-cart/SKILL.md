@@ -28,16 +28,16 @@ to the cart but **cannot read or verify cart contents.** This means:
 
 ```bash
 # Add a single recipe
-grocer cart add-recipe 1
+grocer-cli cart add-recipe 1
 
 # Add multiple recipes (duplicates skipped automatically)
-grocer cart add-recipe 1 2 3
+grocer-cli cart add-recipe 1 2 3
 
 # Skip pantry check
-grocer cart add-recipe 1 2 --no-check
+grocer-cli cart add-recipe 1 2 --no-check
 
 # Allow duplicates across recipes
-grocer cart add-recipe 1 2 --allow-duplicates
+grocer-cli cart add-recipe 1 2 --allow-duplicates
 ```
 
 ## How Deduplication Works
@@ -58,21 +58,21 @@ grocer cart add-recipe 1 2 --allow-duplicates
 Create a recipe for items you buy every week:
 
 ```bash
-grocer recipe create "Weekly Staples" --description "Regular weekly groceries"
-grocer recipe add-item 1 "2% Milk" --product-id 0001111041700
-grocer recipe add-item 1 "Eggs" --product-id 0001111060933
+grocer-cli recipe create "Weekly Staples" --description "Regular weekly groceries"
+grocer-cli recipe add-item 1 "2% Milk" --product-id 0001111041700
+grocer-cli recipe add-item 1 "Eggs" --product-id 0001111060933
 # ... etc
 ```
 
 Then combine with meal recipes each week:
 
 ```bash
-grocer cart add-recipe 1 2    # Staples + Taco Tuesday, no duplicates
+grocer-cli cart add-recipe 1 2    # Staples + Taco Tuesday, no duplicates
 ```
 
 ## Requirements
 
 - Recipe must exist in the local SQLite database
-- Recipe items must have product IDs linked (via `grocer recipe add-item ... --product-id`)
-- User must be authenticated (`grocer login`)
-- For pantry checks to work, track purchases with `grocer pantry track <purchaseId>`
+- Recipe items must have product IDs linked (via `grocer-cli recipe add-item ... --product-id`)
+- User must be authenticated (`grocer-cli login`)
+- For pantry checks to work, track purchases with `grocer-cli pantry track <purchaseId>`

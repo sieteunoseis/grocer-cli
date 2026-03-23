@@ -27,22 +27,22 @@ You help the user manage their grocery shopping using the grocer-cli command-lin
 
 ## Available Commands
 
-- \`grocer search "term"\` — Search for products (returns product name and UPC)
-- \`grocer cart add <UPC>\` — Add a product to the online cart
-- \`grocer cart add-recipe <id> [id...]\` — Add recipe ingredients to cart (auto-deduplicates)
-- \`grocer cart fix <UPC or URL>\` — Replace an unavailable item with an alternative
-- \`grocer cart list\` — Show items added to cart recently
-- \`grocer cart import\` — Import cart data (paste from this chat when reading the cart page)
-- \`grocer recipe list\` — List saved recipes
-- \`grocer recipe list <id>\` — Show recipe ingredients
-- \`grocer recipe edit <id>\` — Interactively swap a product in a recipe
-- \`grocer recipe create "name"\` — Create a new recipe
-- \`grocer recipe add-item <recipeId> "name" --product-id <UPC>\` — Add ingredient to recipe
-- \`grocer locations <zip> --set\` — Find and set preferred store
+- \`grocer-cli search "term"\` — Search for products (returns product name and UPC)
+- \`grocer-cli cart add <UPC>\` — Add a product to the online cart
+- \`grocer-cli cart add-recipe <id> [id...]\` — Add recipe ingredients to cart (auto-deduplicates)
+- \`grocer-cli cart fix <UPC or URL>\` — Replace an unavailable item with an alternative
+- \`grocer-cli cart list\` — Show items added to cart recently
+- \`grocer-cli cart import\` — Import cart data (paste from this chat when reading the cart page)
+- \`grocer-cli recipe list\` — List saved recipes
+- \`grocer-cli recipe list <id>\` — Show recipe ingredients
+- \`grocer-cli recipe edit <id>\` — Interactively swap a product in a recipe
+- \`grocer-cli recipe create "name"\` — Create a new recipe
+- \`grocer-cli recipe add-item <recipeId> "name" --product-id <UPC>\` — Add ingredient to recipe
+- \`grocer-cli locations <zip> --set\` — Find and set preferred store
 
 ## Reading the Cart Page
 
-When the user is on their store cart page (e.g. fredmeyer.com/cart), you can read the cart contents. Format the output like this so it can be pasted into \`grocer cart import\`:
+When the user is on their store cart page (e.g. fredmeyer.com/cart), you can read the cart contents. Format the output like this so it can be pasted into \`grocer-cli cart import\`:
 
 For unavailable items:
 Product Name (size) — UPC: 0001234567890
@@ -63,10 +63,10 @@ Extract UPC codes from product URLs (the 13-digit number in the URL path).
 
 ## Workflow
 
-1. Help user find products: suggest \`grocer search "term"\` commands
-2. Add to cart: suggest \`grocer cart add <UPC>\` or \`grocer cart add-recipe\`
+1. Help user find products: suggest \`grocer-cli search "term"\` commands
+2. Add to cart: suggest \`grocer-cli cart add <UPC>\` or \`grocer-cli cart add-recipe\`
 3. If user shows cart page: read it, cross-reference with recipes, identify missing items
-4. Fix unavailable items: suggest \`grocer cart fix <UPC>\`
+4. Fix unavailable items: suggest \`grocer-cli cart fix <UPC>\`
 5. Always end with: "Review your cart at the store website before checkout"
 `;
 

@@ -9,11 +9,15 @@ import {
   getPurchase,
   getPurchaseItems,
 } from "../lib/db.js";
-import { estimateBestBy, getShelfLifeDays, getAllShelfLifeEntries } from "../lib/shelflife.js";
+import {
+  estimateBestBy,
+  getShelfLifeDays,
+  getAllShelfLifeEntries,
+} from "../lib/shelflife.js";
 import chalk from "chalk";
 
 const pantryCmd = new Command("pantry").description(
-  "Track what's in your fridge/pantry and when it expires"
+  "Track what's in your fridge/pantry and when it expires",
 );
 
 // --- status ---
@@ -24,25 +28,35 @@ pantryCmd
     const items = getPantryItems();
     if (!items.length) {
       console.log(chalk.yellow("\nPantry is empty."));
-      console.log(chalk.dim("Add items: grocer pantry add \"milk\" or auto-track from purchases.\n"));
+      console.log(
+        chalk.dim(
+          'Add items: grocer-cli pantry add "milk" or auto-track from purchases.\n',
+        ),
+      );
       return;
     }
 
     const today = new Date().toISOString().split("T")[0];
     const expired = items.filter((i) => i.best_by < today);
     const expiringSoon = items.filter(
-      (i) => i.best_by >= today && daysUntil(i.best_by) <= 3
+      (i) => i.best_by >= today && daysUntil(i.best_by) <= 3,
     );
     const fresh = items.filter((i) => daysUntil(i.best_by) > 3);
 
     console.log(chalk.bold("\nPantry Status\n"));
-    console.log(`  ${chalk.green(fresh.length)} fresh   ${chalk.yellow(expiringSoon.length)} expiring soon   ${chalk.red(expired.length)} expired`);
+    console.log(
+      `  ${chalk.green(fresh.length)} fresh   ${chalk.yellow(expiringSoon.length)} expiring soon   ${chalk.red(expired.length)} expired`,
+    );
     console.log(`  ${items.length} items tracked\n`);
 
     if (expired.length) {
       console.log(chalk.red.bold("  ⚠ Expired:"));
       for (const item of expired) {
-        console.log(chalk.red(`    ${item.product_name} — expired ${item.best_by} (${Math.abs(daysUntil(item.best_by))}d ago)  [#${item.id}]`));
+        console.log(
+          chalk.red(
+            `    ${item.product_name} — expired ${item.best_by} (${Math.abs(daysUntil(item.best_by))}d ago)  [#${item.id}]`,
+          ),
+        );
       }
       console.log();
     }
@@ -52,7 +66,11 @@ pantryCmd
       for (const item of expiringSoon) {
         const d = daysUntil(item.best_by);
         const label = d === 0 ? "today" : d === 1 ? "tomorrow" : `in ${d}d`;
-        console.log(chalk.yellow(`    ${item.product_name} — best by ${item.best_by} (${label})  [#${item.id}]`));
+        console.log(
+          chalk.yellow(
+            `    ${item.product_name} — best by ${item.best_by} (${label})  [#${item.id}]`,
+          ),
+        );
       }
       console.log();
     }
@@ -60,7 +78,11 @@ pantryCmd
     if (fresh.length) {
       console.log(chalk.dim("  Fresh:"));
       for (const item of fresh.slice(0, 10)) {
-        console.log(chalk.dim(`    ${item.product_name} — best by ${item.best_by} (${daysUntil(item.best_by)}d)  [#${item.id}]`));
+        console.log(
+          chalk.dim(
+            `    ${item.product_name} — best by ${item.best_by} (${daysUntil(item.best_by)}d)  [#${item.id}]`,
+          ),
+        );
       }
       if (fresh.length > 10) {
         console.log(chalk.dim(`    ... and ${fresh.length - 10} more`));
@@ -100,7 +122,9 @@ pantryCmd
       }
 
       console.log(
-        color(`  #${String(item.id).padEnd(4)} ${item.product_name.padEnd(30)} ${item.best_by}  (${status})`)
+        color(
+          `  #${String(item.id).padEnd(4)} ${item.product_name.padEnd(30)} ${item.best_by}  (${status})`,
+        ),
       );
     }
     console.log();
@@ -112,7 +136,11 @@ pantryCmd
   .description("Manually add an item to the pantry")
   .argument("<name>", "Product name")
   .option("-q, --quantity <n>", "Quantity", "1")
-  .option("-d, --date <date>", "Purchase date (YYYY-MM-DD)", () => new Date().toISOString().split("T")[0])
+  .option(
+    "-d, --date <date>",
+    "Purchase date (YYYY-MM-DD)",
+    () => new Date().toISOString().split("T")[0],
+  )
   .option("-b, --best-by <date>", "Override best-by date (YYYY-MM-DD)")
   .action((name, opts) => {
     const purchaseDate = opts.date || new Date().toISOString().split("T")[0];
@@ -160,10 +188,17 @@ pantryCmd
       return;
     }
 
-    console.log(chalk.bold(`\nTracking ${items.length} items from purchase #${purchase.id} (${purchase.date}):\n`));
+    console.log(
+      chalk.bold(
+        `\nTracking ${items.length} items from purchase #${purchase.id} (${purchase.date}):\n`,
+      ),
+    );
 
     for (const item of items) {
-      const { bestBy, shelfLifeDays } = estimateBestBy(item.product_name, purchase.date);
+      const { bestBy, shelfLifeDays } = estimateBestBy(
+        item.product_name,
+        purchase.date,
+      );
       const id = addPantryItem({
         purchaseItemId: item.id,
         productName: item.product_name,
@@ -177,7 +212,9 @@ pantryCmd
 
       const color = shelfLifeDays <= 3 ? chalk.yellow : chalk.green;
       console.log(
-        color(`  ${item.product_name.padEnd(30)} best by ${bestBy}  (~${shelfLifeDays}d)`)
+        color(
+          `  ${item.product_name.padEnd(30)} best by ${bestBy}  (~${shelfLifeDays}d)`,
+        ),
       );
     }
     console.log();
@@ -221,7 +258,10 @@ pantryCmd
   .argument("<name>", "Product name")
   .action((name) => {
     const days = getShelfLifeDays(name);
-    const { bestBy } = estimateBestBy(name, new Date().toISOString().split("T")[0]);
+    const { bestBy } = estimateBestBy(
+      name,
+      new Date().toISOString().split("T")[0],
+    );
     console.log(`\n  ${chalk.bold(name)}: ~${days} days`);
     console.log(chalk.dim(`  If purchased today → best by ${bestBy}`));
     console.log();
@@ -251,7 +291,11 @@ pantryCmd
         color = chalk.red;
         label = `${Math.abs(d)}d ago`;
       }
-      console.log(color(`  ${item.product_name.padEnd(30)} ${item.best_by}  (${label})  [#${item.id}]`));
+      console.log(
+        color(
+          `  ${item.product_name.padEnd(30)} ${item.best_by}  (${label})  [#${item.id}]`,
+        ),
+      );
     }
     console.log();
   });

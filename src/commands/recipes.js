@@ -34,7 +34,9 @@ recipesCmd
       if (recipe.description) console.log(chalk.dim(recipe.description));
       console.log(chalk.dim(`Created: ${recipe.created_at}\n`));
       if (!items.length) {
-        console.log("  No items yet. Add items with: grocer recipe add-item");
+        console.log(
+          "  No items yet. Add items with: grocer-cli recipe add-item",
+        );
       } else {
         console.log(chalk.bold("  Items:"));
         for (const item of items) {
@@ -87,7 +89,7 @@ recipesCmd
     console.log(chalk.dim(`Created: ${recipe.created_at}\n`));
 
     if (!items.length) {
-      console.log("  No items yet. Add items with: grocer recipe add-item");
+      console.log("  No items yet. Add items with: grocer-cli recipe add-item");
     } else {
       console.log(chalk.bold("  Items:"));
       for (const item of items) {

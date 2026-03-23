@@ -35,10 +35,11 @@ The Kroger API powers product search, cart management, store locations, and user
 Run the interactive setup:
 
 ```bash
-grocer init
+grocer-cli init
 ```
 
 When prompted:
+
 - **Chain:** Select `kroger` (or your specific Kroger banner)
 - **Client ID:** Paste the Client ID from step above
 - **Client Secret:** Paste the Client Secret
@@ -55,7 +56,7 @@ Or copy `.env.example` to `.env` and fill in the values.
 ### Authenticate
 
 ```bash
-grocer login
+grocer-cli login
 ```
 
 This opens your browser for Kroger's OAuth2 flow. Log in with your **Kroger store account** (the same account you use on kroger.com or the Kroger app). After authorizing, you'll be redirected back to the CLI.
@@ -63,7 +64,7 @@ This opens your browser for Kroger's OAuth2 flow. Log in with your **Kroger stor
 ### Verify
 
 ```bash
-grocer status
+grocer-cli status
 ```
 
 You should see your authentication status and token expiration.
@@ -71,8 +72,8 @@ You should see your authentication status and token expiration.
 ### Set Your Store
 
 ```bash
-grocer locations 98101          # Search by zip code
-grocer locations 98101 --set    # Auto-set the closest store
+grocer-cli locations 98101          # Search by zip code
+grocer-cli locations 98101 --set    # Auto-set the closest store
 ```
 
 Setting a preferred store enables local pricing and availability in search results.
@@ -106,13 +107,13 @@ The Instacart integration lets you export recipes and shopping lists as Instacar
 Once you have your API key:
 
 ```bash
-grocer config --instacart-key YOUR_API_KEY_HERE
+grocer-cli config --instacart-key YOUR_API_KEY_HERE
 ```
 
 ### Verify
 
 ```bash
-grocer config
+grocer-cli config
 ```
 
 You should see your Instacart key listed (masked).
@@ -121,13 +122,13 @@ You should see your Instacart key listed (masked).
 
 ```bash
 # Export a local recipe
-grocer export recipe 1
+grocer-cli export recipe 1
 
 # Export a feed recipe
-grocer export feed-recipe 42
+grocer-cli export feed-recipe 42
 
 # Export a quick shopping list
-grocer export list "milk" "eggs" "bread" "chicken"
+grocer-cli export list "milk" "eggs" "bread" "chicken"
 ```
 
 Each command generates an Instacart link. When opened, the user picks their store (Fred Meyer, Kroger, etc.), reviews matched products, and checks out for delivery.
@@ -162,7 +163,7 @@ This provides Gmail access for fetching receipt emails from Kroger, Ralphs, Fred
 Export receipt emails as `.eml` or `.html` files and import them:
 
 ```bash
-grocer purchases import receipt.eml
+grocer-cli purchases import receipt.eml
 ```
 
 The CLI parses Kroger family receipt emails and extracts items, prices, quantities, and savings.
@@ -170,6 +171,7 @@ The CLI parses Kroger family receipt emails and extracts items, prices, quantiti
 ### Supported Receipt Senders
 
 The receipt parser recognizes emails from:
+
 - `kroger.com`
 - `ralphs.com`
 - `fredmeyer.com`
@@ -202,11 +204,11 @@ OAuth tokens are stored in the SQLite database at `~/.grocer-cli/grocer.db` (enc
 
 ### Environment Variables
 
-As an alternative to `grocer init`, you can set credentials via environment variables:
+As an alternative to `grocer-cli init`, you can set credentials via environment variables:
 
-| Variable | Description |
-|----------|-------------|
-| `KROGER_CLIENT_ID` | Kroger API Client ID |
+| Variable               | Description              |
+| ---------------------- | ------------------------ |
+| `KROGER_CLIENT_ID`     | Kroger API Client ID     |
 | `KROGER_CLIENT_SECRET` | Kroger API Client Secret |
 
 ---
@@ -214,24 +216,31 @@ As an alternative to `grocer init`, you can set credentials via environment vari
 ## Troubleshooting
 
 ### "Kroger API credentials not configured"
-Run `grocer init` to set up your Client ID and Secret.
+
+Run `grocer-cli init` to set up your Client ID and Secret.
 
 ### "Not logged in"
-Run `grocer login` to authenticate via OAuth2.
+
+Run `grocer-cli login` to authenticate via OAuth2.
 
 ### "Session expired"
-Your refresh token has expired. Run `grocer login` again.
+
+Your refresh token has expired. Run `grocer-cli login` again.
 
 ### "Instacart API key not configured"
-Run `grocer config --instacart-key <key>` with your Instacart Developer Platform key.
+
+Run `grocer-cli config --instacart-key <key>` with your Instacart Developer Platform key.
 
 ### "Instacart API error (401)"
+
 Your Instacart API key may be invalid or expired. Request a new one from the developer portal.
 
 ### OAuth callback not working
+
 - Make sure no other app is blocking the localhost port
-- Try `grocer login` again — it picks a random available port
+- Try `grocer-cli login` again — it picks a random available port
 - Check that your Kroger app has a redirect URI registered (any `http://localhost:*/callback` pattern)
 
 ### Rate limited
+
 The free Kroger API tier allows 10 req/sec and 10,000/day. If you hit limits, wait a few seconds and retry. The CLI does not currently auto-retry on 429 responses.
