@@ -51,6 +51,18 @@ When you're on your store's cart page, Claude can:
 
 See [docs/CLAUDE-BROWSER-INTEGRATION.md](docs/CLAUDE-BROWSER-INTEGRATION.md) for full details.
 
+### Cart Workflow (Fred Meyer / Kroger)
+
+Once items are in your cart, the store's checkout flow lets you choose pickup or delivery:
+
+| Pickup                                       | Delivery                                         |
+| -------------------------------------------- | ------------------------------------------------ |
+| ![Cart - Pickup](screenshot/cart-pickup.png) | ![Cart - Delivery](screenshot/cart-delivery.png) |
+
+| Delivery Address                                     | Schedule Delivery                                      |
+| ---------------------------------------------------- | ------------------------------------------------------ |
+| ![Delivery Address](screenshot/delivery-address.png) | ![Schedule Delivery](screenshot/schedule-delivery.png) |
+
 ## Setup
 
 1. Run the interactive setup:
